@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
+import ProgressCharts from './ProgressCharts';
 import './HabitTracker.css';
 
 const HabitTracker = ({ token }) => {
@@ -133,11 +134,52 @@ const HabitTracker = ({ token }) => {
   };
 
   const renderCalendarView = () => {
-    // Simplified calendar view - you can expand this
+    const daysInMonth = eachDayOfInterval({
+      start: startOfMonth(currentMonth),
+      end: endOfMonth(currentMonth),
+    });
+
     return (
       <div className="calendar-view">
-        <h3>Calendar View (Coming Soon)</h3>
-        <p>This view will show habits in a compact daily grid.</p>
+        <div className="month-navigation">
+          <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))}>
+            Previous
+          </button>
+          <h3>{format(currentMonth, 'MMMM yyyy')}</h3>
+          <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))}>
+            Next
+          </button>
+        </div>
+        <div className="calendar-grid">
+          <div className="calendar-header">
+            <div className="habit-label">Habit</div>
+            {daysInMonth.map(day => (
+              <div key={day} className="day-label">{format(day, 'd')}</div>
+            ))}
+          </div>
+          {habits.map(habit => (
+            <div key={habit._id} className="calendar-row">
+              <div className="habit-name">{habit.name}</div>
+              {daysInMonth.map(day => {
+                const dateStr = format(day, 'yyyy-MM-dd');
+                const status = getHabitEntry(habit, dateStr);
+                return (
+                  <div key={dateStr} className="calendar-cell">
+                    <button
+                      className={`status-${status}`}
+                      onClick={() => {
+                        const newStatus = status === 'done' ? 'missed' : status === 'missed' ? 'not-marked' : 'done';
+                        updateHabitEntry(habit._id, dateStr, newStatus);
+                      }}
+                    >
+                      {getStatusSymbol(status)}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
       </div>
     );
   };
@@ -170,6 +212,8 @@ const HabitTracker = ({ token }) => {
       ))}
 
       {view === 'table' ? renderTableView() : renderCalendarView()}
+
+      <ProgressCharts habits={habits} currentMonth={currentMonth} />
     </div>
   );
 };
