@@ -1,0 +1,303 @@
+.dashboard {
+  padding: 30px 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+  background-color: var(--color-background);
+  min-height: 100vh;
+  color: var(--color-text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+}
+
+.dashboard h1 {
+  text-align: center;
+  margin-bottom: 30px;
+  font-size: 2.5em;
+  font-weight: 700;
+  color: var(--color-primary);
+  letter-spacing: -0.5px;
+}
+
+.month-navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px;
+  padding: 20px;
+  background-color: var(--color-card);
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  gap: 20px;
+}
+
+.month-navigation h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  flex: 1;
+  text-align: center;
+}
+
+.month-navigation button {
+  padding: 10px 22px;
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.month-navigation button:hover {
+  background-color: #1d4ed8;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 25px;
+  margin-bottom: 40px;
+}
+
+.metric-card {
+  background-color: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.metric-card:hover {
+  border-color: var(--color-primary);
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.15);
+  transform: translateY(-4px);
+}
+
+.metric-card h3 {
+  margin: 0 0 20px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.metric-value {
+  font-size: 48px;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+/* Progress Bar Styling */
+.progress-bar-chart {
+  width: 100%;
+  height: 12px;
+  background-color: var(--color-border);
+  border-radius: 6px;
+  overflow: hidden;
+  margin: 12px 0;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
+  border-radius: 6px;
+  transition: width 0.5s ease;
+}
+
+/* Habit Comparison */
+.habit-comparison {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.habit-stat {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background-color: var(--color-border);
+  border-radius: 6px;
+}
+
+.habit-stat .label {
+  font-weight: 600;
+  font-size: 13px;
+  color: #666;
+  min-width: 50px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.habit-stat .habit-name {
+  flex: 1;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.habit-stat .percentage {
+  font-weight: 700;
+  color: var(--color-primary);
+  font-size: 16px;
+  min-width: 45px;
+  text-align: right;
+}
+
+/* Gauge */
+.gauge {
+  width: 100%;
+  height: 16px;
+  background-color: var(--color-border);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-top: 15px;
+}
+
+.gauge-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+  border-radius: 8px;
+  transition: width 0.5s ease;
+}
+
+/* Habit Breakdown */
+.habit-breakdown {
+  background-color: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-top: 30px;
+}
+
+.habit-breakdown h3 {
+  margin: 0 0 25px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.breakdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.breakdown-item {
+  display: grid;
+  grid-template-columns: 180px 1fr 60px;
+  gap: 15px;
+  align-items: center;
+  padding: 15px;
+  background-color: var(--color-border);
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.breakdown-item:hover {
+  background-color: rgba(37, 99, 235, 0.05);
+  border-radius: 8px;
+}
+
+.breakdown-item .habit-name {
+  font-weight: 500;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.breakdown-item .percentage {
+  font-weight: 700;
+  color: var(--color-primary);
+  text-align: right;
+  font-size: 16px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .dashboard {
+    padding: 15px 10px;
+  }
+
+  .dashboard h1 {
+    font-size: 28px;
+    margin-bottom: 20px;
+  }
+
+  .month-navigation {
+    flex-direction: column;
+    gap: 12px;
+    padding: 15px;
+  }
+
+  .month-navigation h3 {
+    order: -1;
+    margin: 0 0 10px 0;
+  }
+
+  .month-navigation button {
+    width: 100%;
+  }
+
+  .metrics-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+    margin-bottom: 30px;
+  }
+
+  .metric-card {
+    padding: 18px;
+  }
+
+  .metric-value {
+    font-size: 36px;
+  }
+
+  .breakdown-item {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .breakdown-item .percentage {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard {
+    padding: 10px 8px;
+  }
+
+  .dashboard h1 {
+    font-size: 20px;
+  }
+
+  .metric-card {
+    padding: 15px;
+  }
+
+  .metric-card h3 {
+    font-size: 14px;
+    margin-bottom: 15px;
+  }
+
+  .metric-value {
+    font-size: 28px;
+  }
+
+  .habit-breakdown {
+    padding: 15px;
+  }
+
+  .breakdown-list {
+    gap: 12px;
+  }
+}

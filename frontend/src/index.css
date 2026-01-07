@@ -1,0 +1,41 @@
+:root {
+  /* Primary Theme */
+  --color-primary: #2563EB;      /* Blue */
+  --color-secondary: #DBEAFE;    /* Light Blue */
+
+  /* Layout */
+  --color-background: #F8FAFC;   /* App Background */
+  --color-card: #FFFFFF;         /* Cards / Containers */
+
+  /* Text */
+  --color-text-primary: #0F172A; /* Main Text */
+  --color-text-secondary: #475569; /* Muted Text */
+
+  /* Border */
+  --color-border: #E2E8F0;
+
+  /* Status Colors (Habit Tracker) */
+  --color-success: #22C55E;  /* Done */
+  --color-danger: #EF4444;   /* Missed */
+  --color-neutral: #9CA3AF;  /* Not Marked */
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}

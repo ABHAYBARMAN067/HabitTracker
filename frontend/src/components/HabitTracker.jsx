@@ -7,7 +7,6 @@ import './HabitTracker.css';
 const HabitTracker = ({ token }) => {
   const [habits, setHabits] = useState([]);
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [view, setView] = useState('table'); // 'table' or 'calendar'
   const [newHabitName, setNewHabitName] = useState('');
 
   useEffect(() => {
@@ -150,36 +149,40 @@ const HabitTracker = ({ token }) => {
             Next
           </button>
         </div>
-        <div className="calendar-grid">
-          <div className="calendar-header">
-            <div className="habit-label">Habit</div>
-            {daysInMonth.map(day => (
-              <div key={day} className="day-label">{format(day, 'd')}</div>
+        <table className="calendar-table">
+          <thead>
+            <tr>
+              <th>Habit</th>
+              {daysInMonth.map(day => (
+                <th key={day}>{format(day, 'd')}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {habits.map(habit => (
+              <tr key={habit._id}>
+                <td className="habit-name-col">{habit.name}</td>
+                {daysInMonth.map(day => {
+                  const dateStr = format(day, 'yyyy-MM-dd');
+                  const status = getHabitEntry(habit, dateStr);
+                  return (
+                    <td key={dateStr} className="calendar-cell">
+                      <button
+                        className={`status-${status}`}
+                        onClick={() => {
+                          const newStatus = status === 'done' ? 'missed' : status === 'missed' ? 'not-marked' : 'done';
+                          updateHabitEntry(habit._id, dateStr, newStatus);
+                        }}
+                      >
+                        {getStatusSymbol(status)}
+                      </button>
+                    </td>
+                  );
+                })}
+              </tr>
             ))}
-          </div>
-          {habits.map(habit => (
-            <div key={habit._id} className="calendar-row">
-              <div className="habit-name">{habit.name}</div>
-              {daysInMonth.map(day => {
-                const dateStr = format(day, 'yyyy-MM-dd');
-                const status = getHabitEntry(habit, dateStr);
-                return (
-                  <div key={dateStr} className="calendar-cell">
-                    <button
-                      className={`status-${status}`}
-                      onClick={() => {
-                        const newStatus = status === 'done' ? 'missed' : status === 'missed' ? 'not-marked' : 'done';
-                        updateHabitEntry(habit._id, dateStr, newStatus);
-                      }}
-                    >
-                      {getStatusSymbol(status)}
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          ))}
-        </div>
+          </tbody>
+        </table>
       </div>
     );
   };
@@ -188,10 +191,6 @@ const HabitTracker = ({ token }) => {
     <div className="habit-tracker">
       <div className="header">
         <h1>Habit Tracker</h1>
-        <div className="view-toggle">
-          <button onClick={() => setView('table')} className={view === 'table' ? 'active' : ''}>Table</button>
-          <button onClick={() => setView('calendar')} className={view === 'calendar' ? 'active' : ''}>Calendar</button>
-        </div>
       </div>
 
       <div className="add-habit">
@@ -211,7 +210,7 @@ const HabitTracker = ({ token }) => {
         </div>
       ))}
 
-      {view === 'table' ? renderTableView() : renderCalendarView()}
+      {renderCalendarView()}
 
       <ProgressCharts habits={habits} currentMonth={currentMonth} />
     </div>
