@@ -2,16 +2,16 @@
   max-width: 400px;
   margin: 50px auto;
   padding: 20px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border);
   border-radius: 8px;
-  background-color: #f0f8ff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: var(--card);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .register-container h2 {
   text-align: center;
   margin-bottom: 20px;
-  color: #333;
+  color: var(--accent);
 }
 
 .register-form {
@@ -22,28 +22,35 @@
 .register-form input {
   margin-bottom: 15px;
   padding: 10px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border);
   border-radius: 4px;
   font-size: 16px;
+  background-color: var(--bg);
+  color: var(--text);
+}
+
+.register-form input::placeholder {
+  color: var(--text-muted);
 }
 
 .register-form button {
   padding: 10px;
-  background-color: #28a745;
+  background-color: var(--primary);
   color: white;
   border: none;
   border-radius: 4px;
   font-size: 16px;
   cursor: pointer;
   transition: background-color 0.3s;
+  font-weight: 600;
 }
 
 .register-form button:hover {
-  background-color: #1e7e34;
+  background-color: var(--primary-hover);
 }
 
 .error {
-  color: #dc3545;
+  color: #ef4444;
   text-align: center;
   margin-top: 10px;
 }
@@ -56,11 +63,11 @@
 .switch-auth button {
   background: none;
   border: none;
-  color: #28a745;
+  color: var(--primary);
   cursor: pointer;
   text-decoration: underline;
 }
 
 .switch-auth button:hover {
-  color: #1e7e34;
+  color: var(--primary-hover);
 }

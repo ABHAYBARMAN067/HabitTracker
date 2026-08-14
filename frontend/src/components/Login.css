@@ -2,16 +2,16 @@
   max-width: 400px;
   margin: 50px auto;
   padding: 20px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border);
   border-radius: 8px;
-  background-color: #fffacd;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: var(--card);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .login-container h2 {
   text-align: center;
   margin-bottom: 20px;
-  color: #333;
+  color: var(--accent);
 }
 
 .login-form {
@@ -22,28 +22,35 @@
 .login-form input {
   margin-bottom: 15px;
   padding: 10px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border);
   border-radius: 4px;
   font-size: 16px;
+  background-color: var(--bg);
+  color: var(--text);
+}
+
+.login-form input::placeholder {
+  color: var(--text-muted);
 }
 
 .login-form button {
   padding: 10px;
-  background-color: #007bff;
+  background-color: var(--primary);
   color: white;
   border: none;
   border-radius: 4px;
   font-size: 16px;
   cursor: pointer;
   transition: background-color 0.3s;
+  font-weight: 600;
 }
 
 .login-form button:hover {
-  background-color: #0056b3;
+  background-color: var(--primary-hover);
 }
 
 .error {
-  color: #dc3545;
+  color: #ef4444;
   text-align: center;
   margin-top: 10px;
 }
@@ -56,11 +63,11 @@
 .switch-auth button {
   background: none;
   border: none;
-  color: #007bff;
+  color: var(--primary);
   cursor: pointer;
   text-decoration: underline;
 }
 
 .switch-auth button:hover {
-  color: #0056b3;
+  color: var(--primary-hover);
 }

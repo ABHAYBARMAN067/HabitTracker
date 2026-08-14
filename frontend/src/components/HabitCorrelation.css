@@ -1,0 +1,242 @@
+.habit-correlation {
+  background: var(--card);
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border);
+}
+
+.correlation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.correlation-header h2 {
+  margin: 0;
+  color: var(--accent);
+  font-size: 1.5rem;
+}
+
+.correlation-stats {
+  display: flex;
+  gap: 16px;
+}
+
+.correlation-stats .stat {
+  background: var(--bg);
+  padding: 12px 16px;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.correlation-stats .stat .label {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.correlation-stats .stat .value {
+  display: block;
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: var(--accent);
+}
+
+.correlation-description {
+  background: var(--bg);
+  border-left: 4px solid var(--primary);
+  padding: 12px 16px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+}
+
+.correlation-description p {
+  margin: 0;
+}
+
+.correlations-list {
+  background: var(--bg);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.correlations-list h3 {
+  margin-top: 0;
+  color: var(--accent);
+  font-size: 1.1rem;
+  border-bottom: 2px solid var(--border);
+  padding-bottom: 12px;
+}
+
+.correlation-item {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 16px;
+  align-items: center;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.correlation-item:last-child {
+  border-bottom: none;
+}
+
+.correlation-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.habit-names {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.habit-name {
+  padding: 4px 8px;
+  background: var(--border);
+  border-radius: 4px;
+  font-size: 0.95rem;
+}
+
+.plus {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.correlation-details {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.both-completed {
+  display: inline-block;
+  padding: 2px 8px;
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.correlation-bar {
+  width: 200px;
+  height: 24px;
+  background: var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.correlation-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #7C3AED, #A78BFA);
+  transition: width 0.3s ease;
+}
+
+.correlation-value {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 80px;
+}
+
+.percentage {
+  font-weight: bold;
+  font-size: 1.1rem;
+  color: var(--accent);
+}
+
+.strength {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.no-data {
+  background: var(--bg);
+  border-radius: 8px;
+  padding: 40px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.no-data p {
+  margin: 0;
+}
+
+.correlation-insights {
+  background: var(--bg);
+  border-radius: 8px;
+  padding: 20px;
+  border-top: 4px solid var(--primary);
+}
+
+.correlation-insights h3 {
+  margin-top: 0;
+  color: var(--accent);
+  font-size: 1.1rem;
+}
+
+.correlation-insights ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.correlation-insights li {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.correlation-insights li:last-child {
+  border-bottom: none;
+}
+
+.correlation-insights strong {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .correlation-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .correlation-stats {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .correlation-item {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .correlation-bar {
+    width: 100%;
+  }
+
+  .correlation-value {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
+  .habit-correlation {
+    padding: 16px;
+  }
+}

@@ -1,0 +1,127 @@
+.weekly-trends {
+  background: var(--card);
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border);
+}
+
+.trends-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.trends-header h2 {
+  margin: 0;
+  color: var(--accent);
+  font-size: 1.5rem;
+}
+
+.trends-stats {
+  display: flex;
+  gap: 24px;
+}
+
+.trends-stats .stat {
+  background: var(--bg);
+  padding: 12px 20px;
+  border-radius: 8px;
+  border-left: 4px solid var(--primary);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.trends-stats .stat.trend-improving {
+  border-left-color: #10b981;
+}
+
+.trends-stats .stat.trend-declining {
+  border-left-color: #ef4444;
+}
+
+.trends-stats .stat.trend-stable {
+  border-left-color: #f97316;
+}
+
+.trends-stats .stat .label {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.trends-stats .stat .value {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: var(--accent);
+}
+
+.trends-stats .stat.trend-improving .value {
+  color: #10b981;
+}
+
+.trends-stats .stat.trend-declining .value {
+  color: #ef4444;
+}
+
+.weekly-trends .recharts-wrapper {
+  background: var(--bg);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.trends-insights {
+  background: var(--bg);
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.trends-insights h3 {
+  margin-top: 0;
+  color: var(--accent);
+  font-size: 1.1rem;
+}
+
+.trends-insights ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.trends-insights li {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.trends-insights li:last-child {
+  border-bottom: none;
+}
+
+.trends-insights strong {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .trends-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .trends-stats {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .weekly-trends {
+    padding: 16px;
+  }
+}

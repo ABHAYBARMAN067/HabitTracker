@@ -4,8 +4,8 @@
   margin: 0 auto;
   padding: 30px 20px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-  background-color: var(--color-background);
-  color: var(--color-text-primary);
+  background-color: var(--bg);
+  color: var(--text);
   min-height: 100vh;
 }
 
@@ -23,7 +23,7 @@
   margin: 0;
   font-size: 32px;
   font-weight: 700;
-  color: var(--color-text-primary);
+  color: var(--accent);
   letter-spacing: -0.5px;
 }
 
@@ -39,27 +39,27 @@
   flex: 1;
   min-width: 200px;
   padding: 12px 16px;
-  border: 2px solid var(--color-border);
+  border: 2px solid var(--border);
   border-radius: 8px;
-  background-color: var(--color-card);
-  color: var(--color-text-primary);
+  background-color: var(--card);
+  color: var(--text);
   font-size: 14px;
   transition: all 0.3s ease;
 }
 
 .add-habit input:focus {
   outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
 }
 
 .add-habit input::placeholder {
-  color: var(--color-text-secondary, #999);
+  color: var(--text-muted);
 }
 
 .add-habit button {
   padding: 12px 24px;
-  background-color: var(--color-success);
+  background-color: var(--primary);
   color: white;
   border: none;
   border-radius: 8px;
@@ -67,18 +67,18 @@
   font-weight: 600;
   font-size: 14px;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .add-habit button:hover {
-  background-color: #16a34a;
+  background-color: var(--primary-hover);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
 }
 
 .add-habit button:active {
   transform: translateY(0);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 /* ===== Habit List View ===== */
@@ -91,17 +91,17 @@
   justify-content: space-between;
   align-items: center;
   padding: 16px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border);
   margin-bottom: 10px;
   border-radius: 8px;
-  background-color: var(--color-card);
+  background-color: var(--card);
   transition: all 0.3s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .habit-item:hover {
-  border-color: var(--color-primary);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
+  border-color: var(--primary);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2);
   transform: translateY(-2px);
 }
 
@@ -109,18 +109,18 @@
   flex: 1;
   font-size: 16px;
   font-weight: 500;
-  color: var(--color-text-primary);
+  color: var(--text);
 }
 
 .habit-item-count {
   margin-right: 20px;
   font-size: 14px;
-  color: var(--color-text-secondary, #666);
+  color: var(--text-secondary);
   min-width: 80px;
 }
 
 .habit-item button {
-  background-color: var(--color-danger);
+  background-color: #ef4444;
   color: white;
   border: none;
   padding: 8px 16px;
@@ -148,21 +148,21 @@
   justify-content: space-between;
   align-items: center;
   padding: 20px;
-  background-color: var(--color-card);
+  background-color: var(--card);
   border-radius: 10px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border);
 }
 
 .month-navigation h2 {
   margin: 0;
   font-size: 20px;
   font-weight: 600;
-  color: var(--color-text-primary);
+  color: var(--text);
 }
 
 .month-navigation button {
   padding: 10px 20px;
-  background-color: var(--color-primary);
+  background-color: var(--primary);
   color: white;
   border: none;
   border-radius: 6px;
@@ -173,9 +173,9 @@
 }
 
 .month-navigation button:hover {
-  background-color: #1d4ed8;
+  background-color: var(--primary-hover);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
 }
 
 .month-navigation button:active {
@@ -186,14 +186,14 @@
 table {
   width: 100%;
   border-collapse: collapse;
-  background-color: var(--color-card);
+  background-color: var(--card);
   border-radius: 10px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 th {
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%);
   color: white;
   padding: 16px;
   text-align: center;
@@ -204,15 +204,15 @@ th {
 }
 
 td {
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border);
   padding: 12px 8px;
   text-align: center;
-  color: var(--color-text-primary);
+  color: var(--text);
   font-size: 14px;
 }
 
 tbody tr:hover {
-  background-color: var(--color-border);
+  background-color: rgba(124, 58, 237, 0.1);
   transition: background-color 0.2s ease;
 }
 
@@ -229,31 +229,31 @@ td button {
 
 td button:hover {
   transform: scale(1.3);
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: rgba(124, 58, 237, 0.1);
 }
 
 /* ===== Calendar View ===== */
 .calendar-view {
   margin-top: 30px;
   padding: 30px;
-  background-color: var(--color-card);
-  border: 1px solid var(--color-border);
+  background-color: var(--card);
+  border: 1px solid var(--border);
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   overflow-x: auto;
 }
 
 .calendar-table {
   width: 100%;
   border-collapse: collapse;
-  background-color: var(--color-card);
+  background-color: var(--card);
   border-radius: 10px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .calendar-table th {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  background: linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%);
   color: white;
   padding: 14px 8px;
   text-align: center;
@@ -269,26 +269,26 @@ td button:hover {
 }
 
 .calendar-table td {
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border);
   padding: 12px 8px;
   text-align: center;
-  color: var(--color-text-primary);
+  color: var(--text);
   font-size: 14px;
   height: 48px;
 }
 
 .calendar-table td.habit-name-col {
   font-weight: 600;
-  color: var(--color-text-primary);
+  color: var(--text);
   text-align: left;
   padding-left: 16px;
-  background-color: #f9fafb;
+  background-color: var(--bg-secondary);
   min-width: 180px;
-  border-right: 2px solid var(--color-primary);
+  border-right: 2px solid var(--primary);
 }
 
 .calendar-table tbody tr:hover {
-  background-color: rgba(37, 99, 235, 0.05);
+  background-color: rgba(124, 58, 237, 0.1);
   transition: background-color 0.2s ease;
 }
 
@@ -300,25 +300,25 @@ td button:hover {
 .calendar-table .calendar-cell button {
   width: 100%;
   height: 36px;
-  border: 2px solid #d1d5db;
+  border: 2px solid var(--border);
   border-radius: 6px;
   cursor: pointer;
   font-size: 16px;
   font-weight: 600;
   transition: all 0.3s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: white;
-  color: #6b7280;
+  background-color: var(--card);
+  color: var(--text-muted);
 }
 
 .calendar-table .calendar-cell button:hover {
   transform: scale(1.08);
-  border-color: var(--color-primary);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
-  background-color: #f0f9ff;
+  border-color: var(--primary);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+  background-color: rgba(124, 58, 237, 0.1);
 }
 
 /* ===== Status Indicators ===== */
@@ -345,13 +345,13 @@ td button:hover {
 }
 
 .status-not-marked {
-  background: #f3f4f6 !important;
-  color: #6b7280 !important;
-  border-color: #d1d5db !important;
+  background: var(--card) !important;
+  color: var(--text-muted) !important;
+  border-color: var(--border) !important;
 }
 
 .status-not-marked:hover {
-  background: #e5e7eb !important;
+  background: rgba(124, 58, 237, 0.1) !important;
 }
 
 @media (max-width: 768px) {
@@ -529,15 +529,15 @@ td button:hover {
 }
 
 .calendar-view::-webkit-scrollbar-track {
-  background: var(--color-border);
+  background: var(--border);
   border-radius: 10px;
 }
 
 .calendar-view::-webkit-scrollbar-thumb {
-  background: var(--color-primary);
+  background: var(--primary);
   border-radius: 10px;
 }
 
 .calendar-view::-webkit-scrollbar-thumb:hover {
-  background: #1d4ed8;
+  background: var(--primary-hover);
 }

@@ -1,6 +1,7 @@
 .App {
   min-height: 100vh;
-  background-color: var(--color-background);
+  background-color: var(--bg);
+  color: var(--text);
 }
 
 .header {
@@ -8,13 +9,13 @@
   justify-content: space-between;
   align-items: center;
   padding: 20px;
-  background-color: var(--color-card);
-  border-bottom: 1px solid var(--color-border);
+  background-color: var(--card);
+  border-bottom: 1px solid var(--border);
 }
 
 .logout-btn {
   padding: 10px 20px;
-  background-color: var(--color-primary);
+  background-color: var(--primary);
   color: white;
   border: none;
   border-radius: 8px;
@@ -24,7 +25,7 @@
 }
 
 .logout-btn:hover {
-  background-color: #1d4ed8;
+  background-color: var(--primary-hover);
 }
 
 .view-toggle {
@@ -34,9 +35,9 @@
 
 .view-toggle button {
   padding: 10px 20px;
-  background-color: var(--color-secondary);
-  color: var(--color-primary);
-  border: 1px solid var(--color-border);
+  background-color: var(--card);
+  color: var(--primary);
+  border: 1px solid var(--border);
   border-radius: 8px;
   cursor: pointer;
   font-weight: 500;
@@ -45,6 +46,6 @@
 
 .view-toggle button:hover,
 .view-toggle button.active {
-  background-color: var(--color-primary);
+  background-color: var(--primary);
   color: white;
 }

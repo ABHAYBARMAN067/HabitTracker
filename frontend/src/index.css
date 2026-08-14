@@ -1,23 +1,18 @@
 :root {
-  /* Primary Theme */
-  --color-primary: #2563EB;      /* Blue */
-  --color-secondary: #DBEAFE;    /* Light Blue */
+  --primary: #7C3AED;
+  --primary-hover: #8B5CF6;
+  --primary-dark: #5B21B6;
 
-  /* Layout */
-  --color-background: #F8FAFC;   /* App Background */
-  --color-card: #FFFFFF;         /* Cards / Containers */
+  --bg: #030712;
+  --bg-secondary: #0B0714;
+  --card: #111827;
 
-  /* Text */
-  --color-text-primary: #0F172A; /* Main Text */
-  --color-text-secondary: #475569; /* Muted Text */
+  --text: #F9FAFB;
+  --text-secondary: #D1D5DB;
+  --text-muted: #9CA3AF;
 
-  /* Border */
-  --color-border: #E2E8F0;
-
-  /* Status Colors (Habit Tracker) */
-  --color-success: #22C55E;  /* Done */
-  --color-danger: #EF4444;   /* Missed */
-  --color-neutral: #9CA3AF;  /* Not Marked */
+  --border: #27272A;
+  --accent: #A78BFA;
 }
 
 * {
@@ -31,8 +26,8 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: var(--color-background);
-  color: var(--color-text-primary);
+  background-color: var(--bg);
+  color: var(--text);
 }
 
 code {
