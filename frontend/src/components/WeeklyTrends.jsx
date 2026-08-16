@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { format, startOfWeek, addDays, subWeeks, endOfWeek, eachDayOfInterval } from 'date-fns';
+import { format, startOfWeek, subWeeks, endOfWeek, eachDayOfInterval } from 'date-fns';
 import './WeeklyTrends.css';
 
 const WeeklyTrends = ({ habits, currentMonth }) => {

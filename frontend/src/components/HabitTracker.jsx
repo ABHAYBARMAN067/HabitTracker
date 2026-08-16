@@ -1,220 +1,79 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import axios from 'axios';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
+import { eachDayOfInterval, endOfMonth, format, startOfMonth } from 'date-fns';
+import { gsap } from 'gsap';
 import ProgressCharts from './ProgressCharts';
+import DataExport from './DataExport';
 import './HabitTracker.css';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const apiConfig = () => ({ withCredentials: true });
+const initialHabit = { name: '', category: 'General', icon: '★', color: '#7C3AED', frequency: 'daily', daysOfWeek: [], target: '' };
+
 const HabitTracker = ({ token }) => {
+  const trackerRef = useRef(null);
   const [habits, setHabits] = useState([]);
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [newHabitName, setNewHabitName] = useState('');
+  const [form, setForm] = useState(initialHabit);
+  const [query, setQuery] = useState('');
+  const [category, setCategory] = useState('All');
+  const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState('');
+  const [celebrate, setCelebrate] = useState(false);
 
+  const showToast = message => { setToast(message); window.setTimeout(() => setToast(''), 2800); };
   useEffect(() => {
-    const fetchHabits = async () => {
-      try {
-        const response = await axios.get('http://localhost:5000/api/habits', {
-          headers: { 'x-auth-token': token },
-        });
-        setHabits(response.data);
-      } catch (error) {
-        console.error('Error fetching habits:', error);
-      }
+    const loadHabits = async () => {
+      setLoading(true);
+      try { const { data } = await axios.get(`${API_URL}/api/habits`, apiConfig(token)); setHabits(data); }
+      catch { setToast('Could not load habits. Please try again.'); }
+      finally { setLoading(false); }
     };
-
-    if (token) {
-      fetchHabits();
-    }
+    loadHabits();
   }, [token]);
+  useLayoutEffect(() => { if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined; const ctx = gsap.context(() => gsap.from('.tracker-title, .smart-habit-form, .calendar-view', { y: 16, opacity: 0, duration: .42, stagger: .1, ease: 'power3.out' }), trackerRef); return () => ctx.revert(); }, []);
 
-  const addHabit = async () => {
-    if (!newHabitName.trim()) return;
-    try {
-      const response = await axios.post(
-        'http://localhost:5000/api/habits',
-        { name: newHabitName },
-        { headers: { 'x-auth-token': token } }
-      );
-      setHabits([...habits, response.data]);
-      setNewHabitName('');
-    } catch (error) {
-      console.error('Error adding habit:', error);
+  const categories = useMemo(() => ['All', ...new Set(habits.map(habit => habit.category || 'General'))], [habits]);
+  const visibleHabits = habits.filter(habit => (category === 'All' || habit.category === category) && habit.name.toLowerCase().includes(query.toLowerCase()));
+  const todayKey = format(new Date(), 'yyyy-MM-dd');
+  const statusFor = (habit, date) => habit.entries.find(entry => format(new Date(entry.date), 'yyyy-MM-dd') === date)?.status || 'not-marked';
+  const allDone = habits.length > 0 && habits.every(habit => habit.entries.some(entry => format(new Date(entry.date), 'yyyy-MM-dd') === todayKey && entry.status === 'done'));
+  const bestStreak = useMemo(() => Math.max(0, ...habits.map(habit => {
+    let streak = 0;
+    for (let offset = 0; offset < 365; offset += 1) {
+      const date = new Date(); date.setDate(date.getDate() - offset);
+      if (statusFor(habit, format(date, 'yyyy-MM-dd')) !== 'done') break;
+      streak += 1;
     }
-  };
+    return streak;
+  })), [habits]);
+  useEffect(() => { if (!allDone) return; setCelebrate(true); const id = window.setTimeout(() => setCelebrate(false), 1700); return () => window.clearTimeout(id); }, [allDone]);
 
-  const updateHabitEntry = async (habitId, date, status) => {
-    try {
-      const response = await axios.put(
-        `http://localhost:5000/api/habits/${habitId}/entry`,
-        { date, status },
-        { headers: { 'x-auth-token': token } }
-      );
-      setHabits(habits.map(habit => habit._id === habitId ? response.data : habit));
-    } catch (error) {
-      console.error('Error updating habit:', error);
-    }
-  };
+  const addHabit = async event => { event.preventDefault(); if (!form.name.trim()) return; try { const { data } = await axios.post(`${API_URL}/api/habits`, { ...form, name: form.name.trim() }, apiConfig(token)); setHabits(current => [data, ...current]); setForm(initialHabit); showToast('Habit created successfully.'); } catch (error) { showToast(error.response?.data?.msg || 'Could not create habit.'); } };
+  const updateEntry = async (habit, date, status) => { try { const { data } = await axios.put(`${API_URL}/api/habits/${habit._id}/entry`, { date, status }, apiConfig(token)); setHabits(current => current.map(item => item._id === habit._id ? data : item)); } catch { showToast('Could not update this habit.'); } };
+  const archiveHabit = async habit => { try { await axios.put(`${API_URL}/api/habits/${habit._id}/archive`, { archived: true }, apiConfig(token)); setHabits(current => current.filter(item => item._id !== habit._id)); showToast(`${habit.name} archived.`); } catch { showToast('Could not archive habit.'); } };
+  const deleteHabit = async habit => { if (!window.confirm(`Permanently delete “${habit.name}”?`)) return; try { await axios.delete(`${API_URL}/api/habits/${habit._id}`, apiConfig(token)); setHabits(current => current.filter(item => item._id !== habit._id)); showToast('Habit deleted.'); } catch { showToast('Could not delete habit.'); } };
+  const days = eachDayOfInterval({ start: startOfMonth(currentMonth), end: endOfMonth(currentMonth) });
+  const nextStatus = status => status === 'not-marked' ? 'done' : status === 'done' ? 'missed' : 'not-marked';
 
-  const deleteHabit = async (habitId) => {
-    try {
-      await axios.delete(`http://localhost:5000/api/habits/${habitId}`, {
-        headers: { 'x-auth-token': token },
-      });
-      setHabits(habits.filter(habit => habit._id !== habitId));
-    } catch (error) {
-      console.error('Error deleting habit:', error);
-    }
-  };
-
-  const getStatusSymbol = (status) => {
-    switch (status) {
-      case 'done': return '✅';
-      case 'missed': return '❌';
-      default: return '⬜';
-    }
-  };
-
-  const getHabitEntry = (habit, date) => {
-    const entry = habit.entries.find(entry => format(new Date(entry.date), 'yyyy-MM-dd') === date);
-    return entry ? entry.status : 'not-marked';
-  };
-
-  const renderTableView = () => {
-    const daysInMonth = eachDayOfInterval({
-      start: startOfMonth(currentMonth),
-      end: endOfMonth(currentMonth),
-    });
-
-    return (
-      <div className="table-view">
-        <div className="month-navigation">
-          <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))}>
-            Previous
-          </button>
-          <h3>{format(currentMonth, 'MMMM yyyy')}</h3>
-          <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))}>
-            Next
-          </button>
-        </div>
-        <table>
-          <thead>
-            <tr>
-              <th>Habit</th>
-              {daysInMonth.map(day => (
-                <th key={day}>{format(day, 'd')}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {habits.map(habit => (
-              <tr key={habit._id}>
-                <td>{habit.name}</td>
-                {daysInMonth.map(day => {
-                  const dateStr = format(day, 'yyyy-MM-dd');
-                  const status = getHabitEntry(habit, dateStr);
-                  return (
-                    <td key={dateStr}>
-                      <button
-                        onClick={() => {
-                          const newStatus = status === 'done' ? 'missed' : status === 'missed' ? 'not-marked' : 'done';
-                          updateHabitEntry(habit._id, dateStr, newStatus);
-                        }}
-                      >
-                        {getStatusSymbol(status)}
-                      </button>
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    );
-  };
-
-  const renderCalendarView = () => {
-    const daysInMonth = eachDayOfInterval({
-      start: startOfMonth(currentMonth),
-      end: endOfMonth(currentMonth),
-    });
-
-    return (
-      <div className="calendar-view">
-        <div className="month-navigation">
-          <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))}>
-            Previous
-          </button>
-          <h3>{format(currentMonth, 'MMMM yyyy')}</h3>
-          <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))}>
-            Next
-          </button>
-        </div>
-        <table className="calendar-table">
-          <thead>
-            <tr>
-              <th>Habit</th>
-              {daysInMonth.map(day => (
-                <th key={day}>{format(day, 'd')}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {habits.map(habit => (
-              <tr key={habit._id}>
-                <td className="habit-name-col">{habit.name}</td>
-                {daysInMonth.map(day => {
-                  const dateStr = format(day, 'yyyy-MM-dd');
-                  const status = getHabitEntry(habit, dateStr);
-                  return (
-                    <td key={dateStr} className="calendar-cell">
-                      <button
-                        className={`status-${status}`}
-                        onClick={() => {
-                          const newStatus = status === 'done' ? 'missed' : status === 'missed' ? 'not-marked' : 'done';
-                          updateHabitEntry(habit._id, dateStr, newStatus);
-                        }}
-                      >
-                        {getStatusSymbol(status)}
-                      </button>
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    );
-  };
-
-  return (
-    <div className="habit-tracker">
-      <div className="header">
-        <h1>Habit Tracker</h1>
-      </div>
-
-      <div className="add-habit">
-        <input
-          type="text"
-          value={newHabitName}
-          onChange={(e) => setNewHabitName(e.target.value)}
-          placeholder="New habit name"
-        />
-        <button onClick={addHabit}>Add Habit</button>
-      </div>
-
-      {habits.map(habit => (
-        <div key={habit._id} className="habit-item">
-          <span>{habit.name}</span>
-          <button onClick={() => deleteHabit(habit._id)}>Delete</button>
-        </div>
-      ))}
-
-      {renderCalendarView()}
-
-      <ProgressCharts habits={habits} currentMonth={currentMonth} />
-    </div>
-  );
+  return <div className="habit-tracker" ref={trackerRef}>
+    {toast && <div className="toast" role="status">{toast}</div>}{celebrate && <div className="confetti" aria-hidden="true">★ ✦ ★ ✦ ★ ✦</div>}
+    <header className="header"><div><h1 className="tracker-title">Habit Tracker</h1><p className="tracker-subtitle">Build routines, track goals and celebrate every streak.</p></div><div className="score-group"><div className="daily-score">Today: <strong>{habits.filter(h => statusFor(h, todayKey) === 'done').length}/{habits.length}</strong></div>{bestStreak >= 7 && <span className="achievement-badge">7-day streak</span>}{bestStreak >= 30 && <span className="achievement-badge legendary">30-day legend</span>}</div></header>
+    <form className="smart-habit-form" onSubmit={addHabit}>
+      <input value={form.icon} onChange={e => setForm({ ...form, icon: e.target.value })} aria-label="Habit icon" maxLength="8" />
+      <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="New habit name" required maxLength="80" />
+      <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}><option>General</option><option>Health</option><option>Study</option><option>Fitness</option><option>Wellness</option><option>Work</option></select>
+      <select value={form.frequency} onChange={e => setForm({ ...form, frequency: e.target.value })}><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="specific-days">Specific days</option></select>
+      {form.frequency === 'specific-days' && <fieldset className="day-picker"><legend>Days</legend>{['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => <label key={`${day}-${index}`}><input type="checkbox" checked={form.daysOfWeek.includes(index)} onChange={() => setForm({ ...form, daysOfWeek: form.daysOfWeek.includes(index) ? form.daysOfWeek.filter(item => item !== index) : [...form.daysOfWeek, index] })} />{day}</label>)}</fieldset>}
+      <input value={form.target} onChange={e => setForm({ ...form, target: e.target.value })} placeholder="Target e.g. 30 min" maxLength="100" />
+      <input type="color" value={form.color} onChange={e => setForm({ ...form, color: e.target.value })} aria-label="Habit color" />
+      <button>Add habit</button>
+    </form>
+    <div className="habit-tools"><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search habits" aria-label="Search habits" /><select value={category} onChange={e => setCategory(e.target.value)} aria-label="Filter by category">{categories.map(item => <option key={item}>{item}</option>)}</select></div>
+    {loading ? <div className="skeleton-list"><span /><span /><span /></div> : visibleHabits.length === 0 ? <div className="empty-state"><span>◎</span><h2>Create your first habit</h2><p>Start small. Consistency compounds into progress.</p></div> : <div className="habit-list">{visibleHabits.map(habit => <article key={habit._id} className="habit-item" style={{ borderLeftColor: habit.color }}><div><strong>{habit.icon} {habit.name}</strong><small>{habit.category} · {habit.frequency}{habit.target ? ` · ${habit.target}` : ''}</small></div><div className="habit-actions"><button onClick={() => archiveHabit(habit)}>Archive</button><button className="delete-habit" onClick={() => deleteHabit(habit)}>Delete</button></div></article>)}</div>}
+    <section className="calendar-view"><div className="month-navigation"><button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))}>Previous</button><h3>{format(currentMonth, 'MMMM yyyy')}</h3><button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))}>Next</button></div><table className="calendar-table"><thead><tr><th>Habit</th>{days.map(day => <th key={day}>{format(day, 'd')}</th>)}</tr></thead><tbody>{visibleHabits.map(habit => <tr key={habit._id}><td className="habit-name-col">{habit.icon} {habit.name}</td>{days.map(day => { const date = format(day, 'yyyy-MM-dd'); const status = statusFor(habit, date); return <td key={date} className="calendar-cell"><button className={`status-${status}`} onClick={() => updateEntry(habit, date, nextStatus(status))} aria-label={`${habit.name}, ${date}: ${status}. Activate to change status.`}>{status === 'done' ? '✓' : status === 'missed' ? '×' : '·'}</button></td>; })}</tr>)}</tbody></table></section>
+    <ProgressCharts habits={habits} currentMonth={currentMonth} /><DataExport habits={habits} />
+  </div>;
 };
 
 export default HabitTracker;

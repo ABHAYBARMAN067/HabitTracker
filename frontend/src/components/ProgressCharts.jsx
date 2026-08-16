@@ -13,7 +13,12 @@ const ProgressCharts = ({ habits, currentMonth }) => {
 
     habits.forEach(habit => {
       const totalDays = daysInMonth.length;
-      const doneDays = habit.entries.filter(entry => entry.status === 'done').length;
+      const doneDays = habit.entries.filter(entry => {
+        const entryDate = new Date(entry.date);
+        return entry.status === 'done'
+          && entryDate >= startOfMonth(currentMonth)
+          && entryDate <= endOfMonth(currentMonth);
+      }).length;
       const completionPercentage = totalDays > 0 ? Math.round((doneDays / totalDays) * 100) : 0;
 
       // Calculate current streak

@@ -19,8 +19,8 @@ const Register = ({ setToken, onSwitchToLogin }) => {
     setError('');
 
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/register', formData);
-      setToken(response.data.token);
+      await axios.post('http://localhost:5000/api/auth/register', formData, { withCredentials: true });
+      setToken(true);
     } catch (err) {
       setError(err.response?.data?.msg || 'An error occurred');
     }

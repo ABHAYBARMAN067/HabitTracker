@@ -1,20 +1,55 @@
+.login-screen {
+  display: grid;
+  min-height: calc(100vh - 72px);
+  place-items: center;
+  padding: 32px 16px;
+}
+
 .login-container {
+  position: relative;
+  overflow: hidden;
   max-width: 400px;
-  margin: 50px auto;
-  padding: 20px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background-color: var(--card);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  width: 100%;
+  margin: 0 auto;
+  padding: 32px;
+  border: 1px solid rgba(167, 139, 250, 0.28);
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgba(24, 32, 51, 0.97), rgba(17, 24, 39, 0.97));
+  box-shadow: 0 20px 55px rgba(0, 0, 0, 0.42), 0 0 36px rgba(124, 58, 237, 0.12);
+  transition: border-color .3s ease, box-shadow .3s ease, transform .3s ease;
+}
+
+.login-container:hover {
+  border-color: rgba(167, 139, 250, 0.55);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.45), 0 0 42px rgba(124, 58, 237, 0.22);
+  transform: translateY(-3px);
+}
+
+.login-orb {
+  position: absolute;
+  width: 150px;
+  height: 150px;
+  background: rgba(124, 58, 237, .16);
+  border-radius: 50%;
+  filter: blur(2px);
+  pointer-events: none;
+}
+
+.login-orb-one { top: -96px; right: -70px; }
+.login-orb-two { bottom: -100px; left: -84px; background: rgba(59, 130, 246, .12); }
 }
 
 .login-container h2 {
+  position: relative;
   text-align: center;
   margin-bottom: 20px;
   color: var(--accent);
 }
 
+.login-subtitle { position: relative; margin: -8px 0 24px; color: var(--text-muted); text-align: center; }
+
 .login-form {
+  position: relative;
   display: flex;
   flex-direction: column;
 }
@@ -23,7 +58,7 @@
   margin-bottom: 15px;
   padding: 10px;
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: 8px;
   font-size: 16px;
   background-color: var(--bg);
   color: var(--text);
@@ -33,12 +68,14 @@
   color: var(--text-muted);
 }
 
+.login-form input:focus { outline: 0; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(124, 58, 237, .18); }
+
 .login-form button {
   padding: 10px;
   background-color: var(--primary);
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   font-size: 16px;
   cursor: pointer;
   transition: background-color 0.3s;
@@ -50,24 +87,39 @@
 }
 
 .error {
+  position: relative;
   color: #ef4444;
   text-align: center;
   margin-top: 10px;
 }
 
 .switch-auth {
+  position: relative;
   text-align: center;
-  margin-top: 20px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(167, 139, 250, 0.2);
+  font-size: 14px;
+  color: var(--text-muted);
+  letter-spacing: 0.3px;
 }
+
+@media (max-width: 460px) { .login-container { padding: 26px 20px; } }
 
 .switch-auth button {
   background: none;
   border: none;
   color: var(--primary);
   cursor: pointer;
-  text-decoration: underline;
+  text-decoration: none;
+  font-weight: 600;
+  margin-left: 4px;
+  position: relative;
+  transition: all 0.3s ease;
+  padding: 2px 4px;
 }
 
 .switch-auth button:hover {
   color: var(--primary-hover);
+  transform: translateY(-1px);
 }

@@ -1,87 +1,87 @@
 const express = require('express');
+const mongoose = require('mongoose');
+const { body, param, validationResult } = require('express-validator');
 const auth = require('../middleware/auth');
 const Habit = require('../models/Habit');
 
 const router = express.Router();
+const habitRules = [
+  body('name').trim().isLength({ min: 1, max: 80 }),
+  body('color').optional().matches(/^#[0-9A-Fa-f]{6}$/),
+  body('icon').optional().isString().isLength({ max: 8 }),
+  body('category').optional().trim().isLength({ max: 40 }),
+  body('frequency').optional().isIn(['daily', 'weekly', 'specific-days']),
+  body('daysOfWeek').optional().isArray(),
+  body('daysOfWeek.*').optional().isInt({ min: 0, max: 6 }),
+  body('target').optional().trim().isLength({ max: 100 }),
+];
+const validate = (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) { res.status(400).json({ errors: errors.array() }); return false; }
+  return true;
+};
+const findOwnedHabit = async (id, userId) => {
+  if (!mongoose.isValidObjectId(id)) return null;
+  return Habit.findOne({ _id: id, user: userId });
+};
 
-// Get all habits for a user
 router.get('/', auth, async (req, res) => {
   try {
-    const habits = await Habit.find({ user: req.user.id });
+    const archived = req.query.archived === 'true';
+    const habits = await Habit.find({ user: req.user.id, archived }).sort({ createdAt: -1 });
     res.json(habits);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
-  }
+  } catch (err) { res.status(500).json({ msg: 'Unable to load habits' }); }
 });
 
-// Create a new habit
-router.post('/', auth, async (req, res) => {
-  const { name, color } = req.body;
-
+router.post('/', auth, habitRules, async (req, res) => {
+  if (!validate(req, res)) return;
   try {
-    const newHabit = new Habit({
-      name,
-      color,
-      user: req.user.id,
-    });
-
-    const habit = await newHabit.save();
-    res.json(habit);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
-  }
+    const habit = await Habit.create({ ...req.body, name: req.body.name.trim(), user: req.user.id });
+    res.status(201).json(habit);
+  } catch (err) { res.status(500).json({ msg: 'Unable to create habit' }); }
 });
 
-// Update habit entry
-router.put('/:id/entry', auth, async (req, res) => {
-  const { date, status } = req.body;
-
+router.put('/:id', auth, param('id').isMongoId(), habitRules, async (req, res) => {
+  if (!validate(req, res)) return;
   try {
-    const habit = await Habit.findById(req.params.id);
-    if (!habit) {
-      return res.status(404).json({ msg: 'Habit not found' });
-    }
-
-    if (habit.user.toString() !== req.user.id) {
-      return res.status(401).json({ msg: 'Not authorized' });
-    }
-
-    const entryIndex = habit.entries.findIndex(entry => entry.date.toDateString() === new Date(date).toDateString());
-
-    if (entryIndex > -1) {
-      habit.entries[entryIndex].status = status;
-    } else {
-      habit.entries.push({ date, status });
-    }
-
+    const habit = await findOwnedHabit(req.params.id, req.user.id);
+    if (!habit) return res.status(404).json({ msg: 'Habit not found' });
+    Object.assign(habit, req.body);
     await habit.save();
-    res.json(habit);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
-  }
+    return res.json(habit);
+  } catch (err) { return res.status(500).json({ msg: 'Unable to update habit' }); }
 });
 
-// Delete a habit
-router.delete('/:id', auth, async (req, res) => {
+router.put('/:id/archive', auth, param('id').isMongoId(), body('archived').isBoolean(), async (req, res) => {
+  if (!validate(req, res)) return;
+  const habit = await findOwnedHabit(req.params.id, req.user.id);
+  if (!habit) return res.status(404).json({ msg: 'Habit not found' });
+  habit.archived = req.body.archived;
+  await habit.save();
+  return res.json(habit);
+});
+
+router.put('/:id/entry', auth, [param('id').isMongoId(), body('date').isISO8601(), body('status').isIn(['done', 'missed', 'not-marked'])], async (req, res) => {
+  if (!validate(req, res)) return;
   try {
-    const habit = await Habit.findById(req.params.id);
-    if (!habit) {
-      return res.status(404).json({ msg: 'Habit not found' });
-    }
+    const habit = await findOwnedHabit(req.params.id, req.user.id);
+    if (!habit) return res.status(404).json({ msg: 'Habit not found' });
+    const entryDate = new Date(req.body.date);
+    const dateKey = entryDate.toISOString().slice(0, 10);
+    const entry = habit.entries.find(item => item.date.toISOString().slice(0, 10) === dateKey);
+    if (entry) entry.status = req.body.status;
+    else habit.entries.push({ date: entryDate, status: req.body.status });
+    await habit.save();
+    return res.json(habit);
+  } catch (err) { return res.status(500).json({ msg: 'Unable to update entry' }); }
+});
 
-    if (habit.user.toString() !== req.user.id) {
-      return res.status(401).json({ msg: 'Not authorized' });
-    }
-
-    await Habit.findByIdAndRemove(req.params.id);
-    res.json({ msg: 'Habit removed' });
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
-  }
+router.delete('/:id', auth, param('id').isMongoId(), async (req, res) => {
+  if (!validate(req, res)) return;
+  const habit = await findOwnedHabit(req.params.id, req.user.id);
+  if (!habit) return res.status(404).json({ msg: 'Habit not found' });
+  await habit.deleteOne();
+  return res.status(204).end();
 });
 
 module.exports = router;

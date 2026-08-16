@@ -19,6 +19,11 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  settings: {
+    theme: { type: String, enum: ['dark', 'light', 'system'], default: 'dark' },
+    notificationsEnabled: { type: Boolean, default: false },
+    reminderTime: { type: String, default: '20:00' },
+  },
 });
 
 module.exports = mongoose.model('User', userSchema);

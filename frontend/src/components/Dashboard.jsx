@@ -1,18 +1,22 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useLayoutEffect, useRef } from 'react';
 import axios from 'axios';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
+import { gsap } from 'gsap';
+import WeeklyTrends from './WeeklyTrends';
+import YearlyHeatmap from './YearlyHeatmap';
+import HabitCorrelation from './HabitCorrelation';
+import PredictiveAnalytics from './PredictiveAnalytics';
 import './Dashboard.css';
 
 const Dashboard = ({ token }) => {
+  const dashboardRef = useRef(null);
   const [habits, setHabits] = useState([]);
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
   useEffect(() => {
     const fetchHabits = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/habits', {
-          headers: { 'x-auth-token': token },
-        });
+        const response = await axios.get('http://localhost:5000/api/habits', { withCredentials: true });
         setHabits(response.data);
       } catch (error) {
         console.error('Error fetching habits:', error);
@@ -64,14 +68,30 @@ const Dashboard = ({ token }) => {
     };
   }, [habits, currentMonth]);
 
-  const pieData = [
-    { name: metrics.bestHabit?.name || 'N/A', value: metrics.bestHabit?.completion || 0, color: '#00C49F' },
-    { name: metrics.worstHabit?.name || 'N/A', value: metrics.worstHabit?.completion || 0, color: '#FF8042' },
-  ];
+  useLayoutEffect(() => {
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reducedMotion) return undefined;
+
+    const context = gsap.context(() => {
+      const timeline = gsap.timeline({ defaults: { ease: 'power3.out' } });
+      timeline
+        .from('.dashboard-title', { y: 22, opacity: 0, duration: 0.5 })
+        .from('.dashboard .month-navigation', { y: 16, opacity: 0, duration: 0.4 }, '-=0.22')
+        .from('.metric-card', { y: 20, opacity: 0, duration: 0.45, stagger: 0.1 }, '-=0.15')
+        .from('.habit-breakdown', { y: 20, opacity: 0, duration: 0.45 }, '-=0.18');
+
+      gsap.fromTo('.dashboard .progress-bar-fill, .dashboard .gauge-fill',
+        { scaleX: 0, transformOrigin: 'left center' },
+        { scaleX: 1, duration: 0.8, stagger: 0.08, ease: 'power2.out', delay: 0.25 }
+      );
+    }, dashboardRef);
+
+    return () => context.revert();
+  }, [metrics, currentMonth]);
 
   return (
-    <div className="dashboard">
-      <h1>Advanced Analytics Dashboard</h1>
+    <div className="dashboard" ref={dashboardRef}>
+      <h1 className="dashboard-title">Advanced Analytics Dashboard</h1>
 
       <div className="month-navigation">
         <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))}>
@@ -134,6 +154,11 @@ const Dashboard = ({ token }) => {
           ))}
         </div>
       </div>
+
+      <WeeklyTrends habits={habits} currentMonth={currentMonth} />
+      <YearlyHeatmap habits={habits} currentMonth={currentMonth} />
+      <HabitCorrelation habits={habits} currentMonth={currentMonth} />
+      <PredictiveAnalytics habits={habits} />
     </div>
   );
 };

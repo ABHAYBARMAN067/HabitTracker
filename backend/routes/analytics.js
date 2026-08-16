@@ -2,13 +2,13 @@ const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
 const Habit = require('../models/Habit');
-const { format, subDays, startOfMonth, endOfMonth, eachDayOfInterval, getWeek } = require('date-fns');
+const { format, subDays, eachDayOfInterval } = require('date-fns');
 
 // Get weekly trends for the past 12 weeks
 router.get('/weekly-trends', auth, async (req, res) => {
   try {
-    const userId = req.userId;
-    const habits = await Habit.find({ userId });
+    const userId = req.user.id;
+    const habits = await Habit.find({ user: userId });
 
     const weeks = [];
     const currentDate = new Date();
@@ -58,8 +58,8 @@ router.get('/weekly-trends', auth, async (req, res) => {
 // Get yearly heatmap data
 router.get('/yearly-heatmap', auth, async (req, res) => {
   try {
-    const userId = req.userId;
-    const habits = await Habit.find({ userId });
+    const userId = req.user.id;
+    const habits = await Habit.find({ user: userId });
 
     const year = new Date().getFullYear();
     const yearStart = new Date(year, 0, 1);
@@ -103,8 +103,8 @@ router.get('/yearly-heatmap', auth, async (req, res) => {
 // Get habit correlation analysis
 router.get('/habit-correlation', auth, async (req, res) => {
   try {
-    const userId = req.userId;
-    const habits = await Habit.find({ userId });
+    const userId = req.user.id;
+    const habits = await Habit.find({ user: userId });
 
     if (habits.length < 2) {
       return res.json({ success: true, data: [], message: 'Need at least 2 habits for correlation analysis' });
@@ -175,8 +175,8 @@ router.get('/habit-correlation', auth, async (req, res) => {
 // Get predictive analytics
 router.get('/predictive-analytics', auth, async (req, res) => {
   try {
-    const userId = req.userId;
-    const habits = await Habit.find({ userId });
+    const userId = req.user.id;
+    const habits = await Habit.find({ user: userId });
 
     // Calculate historical trend for last 30 days
     const last30Days = [];
@@ -257,8 +257,8 @@ router.get('/predictive-analytics', auth, async (req, res) => {
 // Get data for export
 router.get('/export-data', auth, async (req, res) => {
   try {
-    const userId = req.userId;
-    const habits = await Habit.find({ userId });
+    const userId = req.user.id;
+    const habits = await Habit.find({ user: userId });
 
     const exportData = {
       exportDate: format(new Date(), 'yyyy-MM-dd HH:mm:ss'),

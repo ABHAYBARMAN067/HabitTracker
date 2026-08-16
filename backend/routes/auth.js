@@ -5,6 +5,19 @@ const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
 
 const router = express.Router();
+const cookieOptions = {
+  httpOnly: true,
+  sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+  secure: process.env.NODE_ENV === 'production',
+  maxAge: 60 * 60 * 1000,
+};
+
+const sendAuthResponse = (res, user) => {
+  const payload = { user: { id: user.id } };
+  const token = jwt.sign(payload, process.env.JWT_SECRET || 'development-secret-change-me', { expiresIn: '1h' });
+  res.cookie('token', token, cookieOptions);
+  res.json({ token, user: { id: user.id, username: user.username, email: user.email, settings: user.settings } });
+};
 
 // Register
 router.post('/register', [
@@ -17,7 +30,9 @@ router.post('/register', [
     return res.status(400).json({ errors: errors.array() });
   }
 
-  const { username, email, password } = req.body;
+  const username = req.body.username.trim();
+  const email = req.body.email.trim().toLowerCase();
+  const { password } = req.body;
 
   try {
     let user = await User.findOne({ email });
@@ -33,11 +48,7 @@ router.post('/register', [
 
     await user.save();
 
-    const payload = { user: { id: user.id } };
-    jwt.sign(payload, process.env.JWT_SECRET || 'secret', { expiresIn: 3600 }, (err, token) => {
-      if (err) throw err;
-      res.json({ token });
-    });
+    sendAuthResponse(res, user);
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server error');
@@ -54,7 +65,8 @@ router.post('/login', [
     return res.status(400).json({ errors: errors.array() });
   }
 
-  const { email, password } = req.body;
+  const email = req.body.email.trim().toLowerCase();
+  const { password } = req.body;
 
   try {
     let user = await User.findOne({ email });
@@ -67,15 +79,16 @@ router.post('/login', [
       return res.status(400).json({ msg: 'Invalid credentials' });
     }
 
-    const payload = { user: { id: user.id } };
-    jwt.sign(payload, process.env.JWT_SECRET || 'secret', { expiresIn: 3600 }, (err, token) => {
-      if (err) throw err;
-      res.json({ token });
-    });
+    sendAuthResponse(res, user);
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server error');
   }
+});
+
+router.post('/logout', (req, res) => {
+  res.clearCookie('token', cookieOptions);
+  res.status(204).end();
 });
 
 module.exports = router;

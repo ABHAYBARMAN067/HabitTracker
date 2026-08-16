@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import './DataExport.css';
 
 const DataExport = ({ habits }) => {
@@ -140,7 +140,7 @@ const DataExport = ({ habits }) => {
 
       const headers = ['Habit', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-      doc.autoTable({
+      autoTable(doc, {
         head: [headers],
         body: tableData,
         startY: yPosition,
