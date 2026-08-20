@@ -14,6 +14,21 @@ const createApp = () => {
   app.use('/api/habits', require('./routes/habits'));
   app.use('/api/analytics', require('./routes/analytics'));
   app.use('/api/users', require('./routes/users'));
+
+  // Serve frontend in production
+  if (process.env.NODE_ENV === 'production') {
+    const path = require('path');
+    app.use(express.static(path.join(__dirname, '../frontend/dist')));
+
+    app.get('*', (req, res) => {
+      res.sendFile(path.resolve(__dirname, '../frontend/dist', 'index.html'));
+    });
+  } else {
+    app.get('/', (req, res) => {
+      res.send('API is running...');
+    });
+  }
+
   return app;
 };
 
