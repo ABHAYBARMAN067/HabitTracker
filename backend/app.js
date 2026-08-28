@@ -15,14 +15,23 @@ const createApp = () => {
   app.use('/api/analytics', require('./routes/analytics'));
   app.use('/api/users', require('./routes/users'));
 
-  // Serve frontend in production
+  // Serve frontend in production if built, otherwise fallback to API message
   if (process.env.NODE_ENV === 'production') {
     const path = require('path');
-    app.use(express.static(path.join(__dirname, '../frontend/dist')));
+    const fs = require('fs');
+    const frontendDistPath = path.join(__dirname, '../frontend/dist');
+    const indexHtmlPath = path.join(frontendDistPath, 'index.html');
 
-    app.get('*', (req, res) => {
-      res.sendFile(path.resolve(__dirname, '../frontend/dist', 'index.html'));
-    });
+    if (fs.existsSync(indexHtmlPath)) {
+      app.use(express.static(frontendDistPath));
+      app.get('*', (req, res) => {
+        res.sendFile(indexHtmlPath);
+      });
+    } else {
+      app.get('/', (req, res) => {
+        res.send('API is running... (Frontend build not found)');
+      });
+    }
   } else {
     app.get('/', (req, res) => {
       res.send('API is running...');
