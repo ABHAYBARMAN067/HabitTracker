@@ -5,6 +5,7 @@ import Register from './components/Register';
 import HabitTracker from './components/HabitTracker';
 import Dashboard from './components/Dashboard';
 import ProfileSettings from './components/ProfileSettings';
+import api from '../api';
 import './App.css';
 
 function App() {
@@ -16,13 +17,13 @@ function App() {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/users/me`, { credentials: 'include' })
-      .then(response => setToken(response.ok))
+    api.get('/api/users/me')
+      .then(() => setToken(true))
       .catch(() => setToken(false));
   }, []);
 
   const handleLogout = () => {
-    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/auth/logout`, { method: 'POST', credentials: 'include' }).catch(() => {});
+    api.post('/api/auth/logout').catch(() => {});
     setToken(null);
     setIsProfileMenuOpen(false);
     setCurrentView('habit-tracker');

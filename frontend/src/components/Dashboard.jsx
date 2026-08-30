@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useLayoutEffect, useRef } from 'react';
-import axios from 'axios';
+import api from '../../api';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
 import { gsap } from 'gsap';
 import WeeklyTrends from './WeeklyTrends';
@@ -16,7 +16,7 @@ const Dashboard = ({ token }) => {
   useEffect(() => {
     const fetchHabits = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/habits', { withCredentials: true });
+        const response = await api.get('/api/habits');
         setHabits(response.data);
       } catch (error) {
         console.error('Error fetching habits:', error);

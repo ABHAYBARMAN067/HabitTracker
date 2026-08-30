@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import axios from 'axios';
+import api from '../../api';
 import './Login.css';
 
 const weakPasswords = [
@@ -149,12 +149,9 @@ const Login = ({ setToken, onSwitchToRegister }) => {
     }
 
     try {
-      await axios.post(
-        'http://localhost:5000/api/auth/login',
-        formData,
-        {
-          withCredentials: true,
-        }
+      await api.post(
+        '/api/auth/login',
+        formData
       );
 
       setSuccess(true);

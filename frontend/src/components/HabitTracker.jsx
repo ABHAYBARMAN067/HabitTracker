@@ -1,13 +1,12 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import axios from 'axios';
+import api from '../../api';
 import { eachDayOfInterval, endOfMonth, format, startOfMonth } from 'date-fns';
 import { gsap } from 'gsap';
 import ProgressCharts from './ProgressCharts';
 import DataExport from './DataExport';
 import './HabitTracker.css';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-const apiConfig = () => ({ withCredentials: true });
+
 const initialHabit = { name: '', category: 'General', icon: '★', color: '#7C3AED', frequency: 'daily', daysOfWeek: [], target: '' };
 
 const HabitTracker = ({ token }) => {
@@ -25,7 +24,7 @@ const HabitTracker = ({ token }) => {
   useEffect(() => {
     const loadHabits = async () => {
       setLoading(true);
-      try { const { data } = await axios.get(`${API_URL}/api/habits`, apiConfig(token)); setHabits(data); }
+      try { const { data } = await api.get(`/api/habits`); setHabits(data); }
       catch { setToast('Could not load habits. Please try again.'); }
       finally { setLoading(false); }
     };
@@ -49,10 +48,10 @@ const HabitTracker = ({ token }) => {
   })), [habits]);
   useEffect(() => { if (!allDone) return; setCelebrate(true); const id = window.setTimeout(() => setCelebrate(false), 1700); return () => window.clearTimeout(id); }, [allDone]);
 
-  const addHabit = async event => { event.preventDefault(); if (!form.name.trim()) return; try { const { data } = await axios.post(`${API_URL}/api/habits`, { ...form, name: form.name.trim() }, apiConfig(token)); setHabits(current => [data, ...current]); setForm(initialHabit); showToast('Habit created successfully.'); } catch (error) { showToast(error.response?.data?.msg || 'Could not create habit.'); } };
-  const updateEntry = async (habit, date, status) => { try { const { data } = await axios.put(`${API_URL}/api/habits/${habit._id}/entry`, { date, status }, apiConfig(token)); setHabits(current => current.map(item => item._id === habit._id ? data : item)); } catch { showToast('Could not update this habit.'); } };
-  const archiveHabit = async habit => { try { await axios.put(`${API_URL}/api/habits/${habit._id}/archive`, { archived: true }, apiConfig(token)); setHabits(current => current.filter(item => item._id !== habit._id)); showToast(`${habit.name} archived.`); } catch { showToast('Could not archive habit.'); } };
-  const deleteHabit = async habit => { if (!window.confirm(`Permanently delete “${habit.name}”?`)) return; try { await axios.delete(`${API_URL}/api/habits/${habit._id}`, apiConfig(token)); setHabits(current => current.filter(item => item._id !== habit._id)); showToast('Habit deleted.'); } catch { showToast('Could not delete habit.'); } };
+  const addHabit = async event => { event.preventDefault(); if (!form.name.trim()) return; try { const { data } = await api.post(`/api/habits`, { ...form, name: form.name.trim() }); setHabits(current => [data, ...current]); setForm(initialHabit); showToast('Habit created successfully.'); } catch (error) { showToast(error.response?.data?.msg || 'Could not create habit.'); } };
+  const updateEntry = async (habit, date, status) => { try { const { data } = await api.put(`/api/habits/${habit._id}/entry`, { date, status }); setHabits(current => current.map(item => item._id === habit._id ? data : item)); } catch { showToast('Could not update this habit.'); } };
+  const archiveHabit = async habit => { try { await api.put(`/api/habits/${habit._id}/archive`, { archived: true }); setHabits(current => current.filter(item => item._id !== habit._id)); showToast(`${habit.name} archived.`); } catch { showToast('Could not archive habit.'); } };
+  const deleteHabit = async habit => { if (!window.confirm(`Permanently delete “${habit.name}”?`)) return; try { await api.delete(`/api/habits/${habit._id}`); setHabits(current => current.filter(item => item._id !== habit._id)); showToast('Habit deleted.'); } catch { showToast('Could not delete habit.'); } };
   const days = eachDayOfInterval({ start: startOfMonth(currentMonth), end: endOfMonth(currentMonth) });
   const nextStatus = status => status === 'not-marked' ? 'done' : status === 'done' ? 'missed' : 'not-marked';
 

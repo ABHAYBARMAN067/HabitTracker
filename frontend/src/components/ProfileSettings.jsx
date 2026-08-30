@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../../api';
 import './ProfileSettings.css';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-const headers = () => ({ withCredentials: true });
+
 
 const ProfileSettings = ({ token, onDeleted }) => {
   const [user, setUser] = useState(null);
@@ -11,7 +10,7 @@ const ProfileSettings = ({ token, onDeleted }) => {
   const [passwords, setPasswords] = useState({ currentPassword: '', newPassword: '' });
 
   useEffect(() => {
-    axios.get(`${API_URL}/api/users/me`, headers(token)).then(({ data }) => setUser(data)).catch(() => setMessage('Could not load your profile.'));
+    api.get(`/api/users/me`).then(({ data }) => setUser(data)).catch(() => setMessage('Could not load your profile.'));
   }, [token]);
 
   useEffect(() => {
@@ -33,19 +32,19 @@ const ProfileSettings = ({ token, onDeleted }) => {
   const saveProfile = async (event) => {
     event.preventDefault();
     try {
-      const { data } = await axios.put(`${API_URL}/api/users/me`, user, headers(token));
+      const { data } = await api.put(`/api/users/me`, user);
       setUser(data); setMessage('Profile and settings saved.');
     } catch (error) { setMessage(error.response?.data?.msg || 'Could not save settings.'); }
   };
   const changePassword = async (event) => {
     event.preventDefault();
-    try { await axios.put(`${API_URL}/api/users/me/password`, passwords, headers(token)); setPasswords({ currentPassword: '', newPassword: '' }); setMessage('Password changed successfully.'); }
+    try { await api.put(`/api/users/me/password`, passwords); setPasswords({ currentPassword: '', newPassword: '' }); setMessage('Password changed successfully.'); }
     catch (error) { setMessage(error.response?.data?.msg || 'Could not change password.'); }
   };
   const deleteAccount = async () => {
     const password = window.prompt('Enter your password to permanently delete your account and habits.');
     if (!password || !window.confirm('This cannot be undone. Delete account?')) return;
-    try { await axios.delete(`${API_URL}/api/users/me`, { ...headers(token), data: { password } }); onDeleted(); }
+    try { await api.delete(`/api/users/me`, { data: { password } }); onDeleted(); }
     catch (error) { setMessage(error.response?.data?.msg || 'Could not delete account.'); }
   };
   const enableNotifications = async () => {

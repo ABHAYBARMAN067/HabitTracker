@@ -15,7 +15,6 @@ const createApp = () => {
   app.use('/api/analytics', require('./routes/analytics'));
   app.use('/api/users', require('./routes/users'));
 
-  // Serve frontend in production if built, otherwise fallback to API message
   if (process.env.NODE_ENV === 'production') {
     const path = require('path');
     const fs = require('fs');
