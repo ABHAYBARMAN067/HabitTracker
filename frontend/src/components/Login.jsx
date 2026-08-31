@@ -1,27 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import api from '../../api';
+import { weakPasswords } from '../utils/constants';
 import './Login.css';
-
-const weakPasswords = [
-  '123',
-  'password',
-  '123456',
-  'qwerty',
-  'admin',
-  'welcome',
-  '1234',
-  '12345',
-  'football',
-  'baseball',
-  'dragon',
-  'letmein',
-  'monkey',
-  'abc123',
-  '111111',
-  'sunshine',
-  'princess',
-  'qwertyuiop',
-];
 
 const Login = ({ setToken, onSwitchToRegister }) => {
   const [formData, setFormData] = useState({
@@ -89,24 +69,28 @@ const Login = ({ setToken, onSwitchToRegister }) => {
 
   /* 😉 Blink */
   useEffect(() => {
-    let timeout;
+    let outerTimeout;
+    let innerTimeout;
 
     const blink = () => {
       setBlinking(true);
 
-      setTimeout(() => {
+      innerTimeout = setTimeout(() => {
         setBlinking(false);
       }, 200);
 
-      timeout = setTimeout(
+      outerTimeout = setTimeout(
         blink,
         Math.random() * 5000 + 2000
       );
     };
 
-    timeout = setTimeout(blink, 2000);
+    outerTimeout = setTimeout(blink, 2000);
 
-    return () => clearTimeout(timeout);
+    return () => {
+      clearTimeout(outerTimeout);
+      clearTimeout(innerTimeout);
+    };
   }, []);
 
   const handleChange = (e) => {
@@ -134,9 +118,9 @@ const Login = ({ setToken, onSwitchToRegister }) => {
     e.preventDefault();
     setError('');
 
-    if (formData.password.length < 3) {
+    if (formData.password.length < 6) {
       setError(
-        'Password too weak! The eyes are not pleased.'
+        'Password too short (min 6 characters).'
       );
 
       setShake(true);

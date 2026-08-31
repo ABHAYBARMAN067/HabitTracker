@@ -99,8 +99,8 @@ const WeeklyTrends = ({ habits, currentMonth }) => {
         <ul>
           <li>Your average completion rate over the past 12 weeks is <strong>{averageCompletion}%</strong></li>
           <li>Current trend: <strong>{trend}</strong></li>
-          <li>Highest completion: <strong>{Math.max(...weeklyData.map(w => w.completion))}%</strong></li>
-          <li>Lowest completion: <strong>{Math.min(...weeklyData.map(w => w.completion))}%</strong></li>
+          <li>Highest completion: <strong>{weeklyData.length > 0 ? Math.max(...weeklyData.map(w => w.completion)) : 0}%</strong></li>
+          <li>Lowest completion: <strong>{weeklyData.length > 0 ? Math.min(...weeklyData.map(w => w.completion)) : 0}%</strong></li>
         </ul>
       </div>
     </div>

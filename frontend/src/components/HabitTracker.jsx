@@ -11,6 +11,7 @@ const initialHabit = { name: '', category: 'General', icon: '★', color: '#7C3A
 
 const HabitTracker = ({ token }) => {
   const trackerRef = useRef(null);
+  const celebratedRef = useRef(null);
   const [habits, setHabits] = useState([]);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [form, setForm] = useState(initialHabit);
@@ -29,7 +30,7 @@ const HabitTracker = ({ token }) => {
       finally { setLoading(false); }
     };
     loadHabits();
-  }, [token]);
+  }, []);
   useLayoutEffect(() => { if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined; const ctx = gsap.context(() => gsap.from('.tracker-title, .smart-habit-form, .calendar-view', { y: 16, opacity: 0, duration: .42, stagger: .1, ease: 'power3.out' }), trackerRef); return () => ctx.revert(); }, []);
 
   const categories = useMemo(() => ['All', ...new Set(habits.map(habit => habit.category || 'General'))], [habits]);
@@ -39,14 +40,24 @@ const HabitTracker = ({ token }) => {
   const allDone = habits.length > 0 && habits.every(habit => habit.entries.some(entry => format(new Date(entry.date), 'yyyy-MM-dd') === todayKey && entry.status === 'done'));
   const bestStreak = useMemo(() => Math.max(0, ...habits.map(habit => {
     let streak = 0;
-    for (let offset = 0; offset < 365; offset += 1) {
+    const todayStr = format(new Date(), 'yyyy-MM-dd');
+    const todayDone = statusFor(habit, todayStr) === 'done';
+    const startOffset = todayDone ? 0 : 1;
+    for (let offset = startOffset; offset < 365; offset += 1) {
       const date = new Date(); date.setDate(date.getDate() - offset);
       if (statusFor(habit, format(date, 'yyyy-MM-dd')) !== 'done') break;
       streak += 1;
     }
     return streak;
   })), [habits]);
-  useEffect(() => { if (!allDone) return; setCelebrate(true); const id = window.setTimeout(() => setCelebrate(false), 1700); return () => window.clearTimeout(id); }, [allDone]);
+  useEffect(() => {
+    if (!allDone) return;
+    if (celebratedRef.current === todayKey) return;
+    celebratedRef.current = todayKey;
+    setCelebrate(true);
+    const id = window.setTimeout(() => setCelebrate(false), 1700);
+    return () => window.clearTimeout(id);
+  }, [allDone, todayKey]);
 
   const addHabit = async event => { event.preventDefault(); if (!form.name.trim()) return; try { const { data } = await api.post(`/api/habits`, { ...form, name: form.name.trim() }); setHabits(current => [data, ...current]); setForm(initialHabit); showToast('Habit created successfully.'); } catch (error) { showToast(error.response?.data?.msg || 'Could not create habit.'); } };
   const updateEntry = async (habit, date, status) => { try { const { data } = await api.put(`/api/habits/${habit._id}/entry`, { date, status }); setHabits(current => current.map(item => item._id === habit._id ? data : item)); } catch { showToast('Could not update this habit.'); } };

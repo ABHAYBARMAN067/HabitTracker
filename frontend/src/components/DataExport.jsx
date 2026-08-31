@@ -48,7 +48,10 @@ const DataExport = ({ habits }) => {
       const url = URL.createObjectURL(blob);
       link.setAttribute('href', url);
       link.setAttribute('download', `habits-${format(new Date(), 'yyyy-MM-dd')}.csv`);
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
 
       setExportStatus('CSV exported successfully!');
       setTimeout(() => setExportStatus(''), 3000);
@@ -83,7 +86,10 @@ const DataExport = ({ habits }) => {
       const url = URL.createObjectURL(blob);
       link.setAttribute('href', url);
       link.setAttribute('download', `habits-${format(new Date(), 'yyyy-MM-dd')}.json`);
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
 
       setExportStatus('JSON exported successfully!');
       setTimeout(() => setExportStatus(''), 3000);
@@ -194,7 +200,10 @@ const DataExport = ({ habits }) => {
       const url = URL.createObjectURL(blob);
       link.setAttribute('href', url);
       link.setAttribute('download', `habits-complete-${timestamp}.json`);
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
 
       setExportStatus('Complete data export successful!');
       setTimeout(() => setExportStatus(''), 3000);

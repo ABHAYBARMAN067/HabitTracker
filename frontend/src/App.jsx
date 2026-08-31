@@ -24,7 +24,7 @@ function App() {
 
   const handleLogout = () => {
     api.post('/api/auth/logout').catch(() => {});
-    setToken(null);
+    setToken(false);
     setIsProfileMenuOpen(false);
     setCurrentView('habit-tracker');
   };
@@ -62,8 +62,6 @@ function App() {
         <nav className="primary-nav" aria-label="Primary navigation">
           <button onClick={() => token ? selectView('habit-tracker') : openAuth(true)} className={token && currentView === 'habit-tracker' ? 'active' : ''}>Home</button>
           <button onClick={() => token ? selectView('dashboard') : openAuth(true)} className={token && currentView === 'dashboard' ? 'active' : ''}>Dashboard</button>
-          <a href="#about">About</a>
-          <a href="#services">Services</a>
         </nav>
 
         <div className="nav-actions">
@@ -78,7 +76,6 @@ function App() {
                   aria-expanded={isNotificationsOpen}
                 >
                   <span aria-hidden="true">🔔</span>
-                  <span className="notification-badge">1</span>
                 </button>
                 {isNotificationsOpen && (
                   <div className="notification-popover" role="status">

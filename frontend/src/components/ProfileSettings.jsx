@@ -32,7 +32,7 @@ const ProfileSettings = ({ token, onDeleted }) => {
   const saveProfile = async (event) => {
     event.preventDefault();
     try {
-      const { data } = await api.put(`/api/users/me`, user);
+      const { data } = await api.put(`/api/users/me`, { username: user.username, email: user.email, settings: user.settings });
       setUser(data); setMessage('Profile and settings saved.');
     } catch (error) { setMessage(error.response?.data?.msg || 'Could not save settings.'); }
   };
@@ -51,7 +51,11 @@ const ProfileSettings = ({ token, onDeleted }) => {
     if (!('Notification' in window)) return setMessage('Browser notifications are not supported here.');
     const permission = await Notification.requestPermission();
     if (permission !== 'granted') return setMessage('Notification permission was not granted.');
-    setUser(current => ({ ...current, settings: { ...current.settings, notificationsEnabled: true } }));
+    try {
+      const { data } = await api.put('/api/users/me', { settings: { ...user.settings, notificationsEnabled: true } });
+      setUser(data);
+      setMessage('Notifications enabled.');
+    } catch { setMessage('Could not save notification setting.'); }
   };
 
   if (!user) return <section className="account-panel"><h1>Loading your profile…</h1></section>;

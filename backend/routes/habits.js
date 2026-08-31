@@ -54,11 +54,13 @@ router.put('/:id', auth, param('id').isMongoId(), habitRules, async (req, res) =
 
 router.put('/:id/archive', auth, param('id').isMongoId(), body('archived').isBoolean(), async (req, res) => {
   if (!validate(req, res)) return;
-  const habit = await findOwnedHabit(req.params.id, req.user.id);
-  if (!habit) return res.status(404).json({ msg: 'Habit not found' });
-  habit.archived = req.body.archived;
-  await habit.save();
-  return res.json(habit);
+  try {
+    const habit = await findOwnedHabit(req.params.id, req.user.id);
+    if (!habit) return res.status(404).json({ msg: 'Habit not found' });
+    habit.archived = req.body.archived;
+    await habit.save();
+    return res.json(habit);
+  } catch (err) { return res.status(500).json({ msg: 'Unable to archive habit' }); }
 });
 
 router.put('/:id/entry', auth, [param('id').isMongoId(), body('date').isISO8601(), body('status').isIn(['done', 'missed', 'not-marked'])], async (req, res) => {
@@ -78,10 +80,12 @@ router.put('/:id/entry', auth, [param('id').isMongoId(), body('date').isISO8601(
 
 router.delete('/:id', auth, param('id').isMongoId(), async (req, res) => {
   if (!validate(req, res)) return;
-  const habit = await findOwnedHabit(req.params.id, req.user.id);
-  if (!habit) return res.status(404).json({ msg: 'Habit not found' });
-  await habit.deleteOne();
-  return res.status(204).end();
+  try {
+    const habit = await findOwnedHabit(req.params.id, req.user.id);
+    if (!habit) return res.status(404).json({ msg: 'Habit not found' });
+    await habit.deleteOne();
+    return res.status(204).end();
+  } catch (err) { return res.status(500).json({ msg: 'Unable to delete habit' }); }
 });
 
 module.exports = router;

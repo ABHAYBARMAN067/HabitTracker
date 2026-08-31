@@ -8,7 +8,7 @@ const { format, subDays, eachDayOfInterval } = require('date-fns');
 router.get('/weekly-trends', auth, async (req, res) => {
   try {
     const userId = req.user.id;
-    const habits = await Habit.find({ user: userId });
+    const habits = await Habit.find({ user: userId, archived: false }); // BUG-15: exclude archived
 
     const weeks = [];
     const currentDate = new Date();
@@ -59,7 +59,7 @@ router.get('/weekly-trends', auth, async (req, res) => {
 router.get('/yearly-heatmap', auth, async (req, res) => {
   try {
     const userId = req.user.id;
-    const habits = await Habit.find({ user: userId });
+    const habits = await Habit.find({ user: userId, archived: false }); // BUG-15: exclude archived
 
     const year = new Date().getFullYear();
     const yearStart = new Date(year, 0, 1);
@@ -104,7 +104,7 @@ router.get('/yearly-heatmap', auth, async (req, res) => {
 router.get('/habit-correlation', auth, async (req, res) => {
   try {
     const userId = req.user.id;
-    const habits = await Habit.find({ user: userId });
+    const habits = await Habit.find({ user: userId, archived: false }); // BUG-15: exclude archived
 
     if (habits.length < 2) {
       return res.json({ success: true, data: [], message: 'Need at least 2 habits for correlation analysis' });
@@ -112,7 +112,6 @@ router.get('/habit-correlation', auth, async (req, res) => {
 
     const correlationMatrix = {};
 
-    // Initialize correlation matrix
     habits.forEach((habit1, idx1) => {
       habits.forEach((habit2, idx2) => {
         if (idx1 !== idx2) {
@@ -130,7 +129,6 @@ router.get('/habit-correlation', auth, async (req, res) => {
       });
     });
 
-    // Calculate correlations
     const currentMonth = new Date();
     const startDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
     const endDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
@@ -157,7 +155,6 @@ router.get('/habit-correlation', auth, async (req, res) => {
       });
     }
 
-    // Calculate correlation coefficient
     Object.values(correlationMatrix).forEach(data => {
       if (data.totalDays > 0) {
         data.correlation = Math.round((data.bothCompleted / data.totalDays) * 100);
@@ -176,9 +173,8 @@ router.get('/habit-correlation', auth, async (req, res) => {
 router.get('/predictive-analytics', auth, async (req, res) => {
   try {
     const userId = req.user.id;
-    const habits = await Habit.find({ user: userId });
+    const habits = await Habit.find({ user: userId, archived: false }); // BUG-15: exclude archived
 
-    // Calculate historical trend for last 30 days
     const last30Days = [];
     for (let i = 29; i >= 0; i--) {
       const date = subDays(new Date(), i);
@@ -199,7 +195,6 @@ router.get('/predictive-analytics', auth, async (req, res) => {
       });
     }
 
-    // Linear regression
     const n = last30Days.length;
     let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
 
@@ -213,7 +208,6 @@ router.get('/predictive-analytics', auth, async (req, res) => {
     const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
     const intercept = (sumY - slope * sumX) / n;
 
-    // Generate forecast
     const forecast = [];
     for (let i = 0; i < 14; i++) {
       const predictedValue = Math.max(0, Math.min(100, Math.round(intercept + slope * (n + i))));
@@ -226,7 +220,6 @@ router.get('/predictive-analytics', auth, async (req, res) => {
       });
     }
 
-    // Calculate insights
     const recentTrend = last30Days.slice(-7).map(d => d.completion);
     const recentAvg = Math.round(recentTrend.reduce((a, b) => a + b, 0) / recentTrend.length);
 

@@ -120,11 +120,13 @@ const Dashboard = ({ token }) => {
               <span className="habit-name">{metrics.bestHabit?.name || 'N/A'}</span>
               <span className="percentage">{metrics.bestHabit?.completion || 0}%</span>
             </div>
-            <div className="habit-stat">
-              <span className="label">Worst:</span>
-              <span className="habit-name">{metrics.worstHabit?.name || 'N/A'}</span>
-              <span className="percentage">{metrics.worstHabit?.completion || 0}%</span>
-            </div>
+            {metrics.habitStats.length > 1 && (
+              <div className="habit-stat">
+                <span className="label">Worst:</span>
+                <span className="habit-name">{metrics.worstHabit?.name || 'N/A'}</span>
+                <span className="percentage">{metrics.worstHabit?.completion || 0}%</span>
+              </div>
+            )}
           </div>
         </div>
 
