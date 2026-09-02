@@ -118,7 +118,7 @@ function App() {
 
       {token ? (
         <main className="app-view">
-          {currentView === 'habit-tracker' && <HabitTracker token={token} />}
+          {currentView === 'habit-tracker' && <HabitTracker />}
           {currentView === 'dashboard' && <Dashboard token={token} />}
           {(currentView === 'profile' || currentView === 'settings') && <ProfileSettings token={token} onDeleted={handleLogout} />}
         </main>

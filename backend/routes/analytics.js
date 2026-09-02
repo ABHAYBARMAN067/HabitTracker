@@ -4,6 +4,8 @@ const auth = require('../middleware/auth');
 const Habit = require('../models/Habit');
 const { format, subDays, eachDayOfInterval } = require('date-fns');
 
+const entryDateKey = value => new Date(value).toISOString().slice(0, 10);
+
 // Get weekly trends for the past 12 weeks
 router.get('/weekly-trends', auth, async (req, res) => {
   try {
@@ -31,7 +33,7 @@ router.get('/weekly-trends', auth, async (req, res) => {
       habits.forEach(habit => {
         const doneDays = days.filter(day => {
           const dateStr = format(day, 'yyyy-MM-dd');
-          const entry = habit.entries.find(e => format(new Date(e.date), 'yyyy-MM-dd') === dateStr);
+          const entry = habit.entries.find(e => entryDateKey(e.date) === dateStr);
           return entry && entry.status === 'done';
         }).length;
 
@@ -77,7 +79,7 @@ router.get('/yearly-heatmap', auth, async (req, res) => {
       let completedHabits = 0;
 
       habits.forEach(habit => {
-        const entry = habit.entries.find(e => format(new Date(e.date), 'yyyy-MM-dd') === dateStr);
+        const entry = habit.entries.find(e => entryDateKey(e.date) === dateStr);
         if (entry && entry.status === 'done') {
           completedHabits++;
         }
@@ -140,8 +142,8 @@ router.get('/habit-correlation', auth, async (req, res) => {
         habits.forEach((habit2, idx2) => {
           if (idx1 < idx2) {
             const key = [habit1._id, habit2._id].sort().join('-');
-            const entry1 = habit1.entries.find(e => format(new Date(e.date), 'yyyy-MM-dd') === dateStr);
-            const entry2 = habit2.entries.find(e => format(new Date(e.date), 'yyyy-MM-dd') === dateStr);
+            const entry1 = habit1.entries.find(e => entryDateKey(e.date) === dateStr);
+            const entry2 = habit2.entries.find(e => entryDateKey(e.date) === dateStr);
 
             const habit1Done = entry1 && entry1.status === 'done';
             const habit2Done = entry2 && entry2.status === 'done';
@@ -182,7 +184,7 @@ router.get('/predictive-analytics', auth, async (req, res) => {
 
       let totalCompletion = 0;
       habits.forEach(habit => {
-        const entry = habit.entries.find(e => format(new Date(e.date), 'yyyy-MM-dd') === dateStr);
+        const entry = habit.entries.find(e => entryDateKey(e.date) === dateStr);
         if (entry && entry.status === 'done') {
           totalCompletion++;
         }
@@ -260,7 +262,7 @@ router.get('/export-data', auth, async (req, res) => {
         name: habit.name,
         createdAt: habit.createdAt,
         entries: habit.entries.map(entry => ({
-          date: format(new Date(entry.date), 'yyyy-MM-dd'),
+          date: entryDateKey(entry.date),
           status: entry.status,
         })),
       })),

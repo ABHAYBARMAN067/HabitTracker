@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import api from '../../api';
 import { eachDayOfInterval, endOfMonth, format, startOfMonth } from 'date-fns';
 import { gsap } from 'gsap';
+import { entryDateKey } from '../utils/dates';
 import ProgressCharts from './ProgressCharts';
 import DataExport from './DataExport';
 import './HabitTracker.css';
@@ -9,7 +10,7 @@ import './HabitTracker.css';
 
 const initialHabit = { name: '', category: 'General', icon: '★', color: '#7C3AED', frequency: 'daily', daysOfWeek: [], target: '' };
 
-const HabitTracker = ({ token }) => {
+const HabitTracker = () => {
   const trackerRef = useRef(null);
   const celebratedRef = useRef(null);
   const [habits, setHabits] = useState([]);
@@ -36,7 +37,7 @@ const HabitTracker = ({ token }) => {
   const categories = useMemo(() => ['All', ...new Set(habits.map(habit => habit.category || 'General'))], [habits]);
   const visibleHabits = habits.filter(habit => (category === 'All' || habit.category === category) && habit.name.toLowerCase().includes(query.toLowerCase()));
   const todayKey = format(new Date(), 'yyyy-MM-dd');
-  const statusFor = (habit, date) => habit.entries.find(entry => format(new Date(entry.date), 'yyyy-MM-dd') === date)?.status || 'not-marked';
+  const statusFor = (habit, date) => habit.entries.find(entry => entryDateKey(entry.date) === date)?.status || 'not-marked';
   const allDone = habits.length > 0 && habits.every(habit => habit.entries.some(entry => format(new Date(entry.date), 'yyyy-MM-dd') === todayKey && entry.status === 'done'));
   const bestStreak = useMemo(() => Math.max(0, ...habits.map(habit => {
     let streak = 0;

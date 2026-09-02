@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
+import { entryDateKey } from '../utils/dates';
 import './ProgressCharts.css';
 
 const ProgressCharts = ({ habits, currentMonth }) => {
@@ -14,10 +15,10 @@ const ProgressCharts = ({ habits, currentMonth }) => {
     habits.forEach(habit => {
       const totalDays = daysInMonth.length;
       const doneDays = habit.entries.filter(entry => {
-        const entryDate = new Date(entry.date);
+        const entryDate = entryDateKey(entry.date);
         return entry.status === 'done'
-          && entryDate >= startOfMonth(currentMonth)
-          && entryDate <= endOfMonth(currentMonth);
+          && entryDate >= format(startOfMonth(currentMonth), 'yyyy-MM-dd')
+          && entryDate <= format(endOfMonth(currentMonth), 'yyyy-MM-dd');
       }).length;
       const completionPercentage = totalDays > 0 ? Math.round((doneDays / totalDays) * 100) : 0;
 
@@ -28,7 +29,7 @@ const ProgressCharts = ({ habits, currentMonth }) => {
         const date = new Date(today);
         date.setDate(today.getDate() - i);
         const dateStr = format(date, 'yyyy-MM-dd');
-        const entry = habit.entries.find(e => format(new Date(e.date), 'yyyy-MM-dd') === dateStr);
+        const entry = habit.entries.find(e => entryDateKey(e.date) === dateStr);
         if (entry && entry.status === 'done') {
           currentStreak++;
         } else {
@@ -51,7 +52,7 @@ const ProgressCharts = ({ habits, currentMonth }) => {
     const today = new Date();
     const todayStr = format(today, 'yyyy-MM-dd');
     const todayHabits = habits.map(habit => {
-      const entry = habit.entries.find(e => format(new Date(e.date), 'yyyy-MM-dd') === todayStr);
+      const entry = habit.entries.find(e => entryDateKey(e.date) === todayStr);
       const status = entry ? entry.status : 'not-marked';
       return `${habit.name}: ${status === 'done' ? '✅' : status === 'missed' ? '❌' : '⬜'}`;
     }).join('\n');
@@ -62,11 +63,11 @@ const ProgressCharts = ({ habits, currentMonth }) => {
       navigator.share({
         title: 'Habit Tracker Progress',
         text: shareText,
-      });
+      }).catch(() => {});
     } else {
-      navigator.clipboard.writeText(shareText).then(() => {
-        alert('Progress copied to clipboard!');
-      });
+      navigator.clipboard?.writeText(shareText)
+        .then(() => alert('Progress copied to clipboard!'))
+        .catch(() => alert('Unable to copy progress.'));
     }
   };
 

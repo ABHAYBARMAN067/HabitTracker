@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { format, startOfWeek, subWeeks, endOfWeek, eachDayOfInterval } from 'date-fns';
+import { entryDateKey } from '../utils/dates';
 import './WeeklyTrends.css';
 
 const WeeklyTrends = ({ habits, currentMonth }) => {
@@ -24,7 +25,7 @@ const WeeklyTrends = ({ habits, currentMonth }) => {
       habits.forEach(habit => {
         const doneDays = days.filter(day => {
           const dateStr = format(day, 'yyyy-MM-dd');
-          const entry = habit.entries.find(e => format(new Date(e.date), 'yyyy-MM-dd') === dateStr);
+          const entry = habit.entries.find(e => entryDateKey(e.date) === dateStr);
           return entry && entry.status === 'done';
         }).length;
 

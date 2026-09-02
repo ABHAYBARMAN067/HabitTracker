@@ -257,7 +257,6 @@ const Register = ({ setToken, onSwitchToLogin }) => {
     <div className="register-screen">
       <div
         className={`register-box ${shake ? 'shake' : ''}`}
-        ref={containerRef}
       >
         <h2>Create Account</h2>
 

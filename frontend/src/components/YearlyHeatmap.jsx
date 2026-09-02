@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { format, eachDayOfInterval, getWeek, getDay } from 'date-fns';
+import { entryDateKey } from '../utils/dates';
 import './YearlyHeatmap.css';
 
 const YearlyHeatmap = ({ habits, currentMonth }) => {
@@ -20,7 +21,7 @@ const YearlyHeatmap = ({ habits, currentMonth }) => {
       let completedHabits = 0;
 
       habits.forEach(habit => {
-        const entry = habit.entries.find(e => format(new Date(e.date), 'yyyy-MM-dd') === dateStr);
+        const entry = habit.entries.find(e => entryDateKey(e.date) === dateStr);
         if (entry && entry.status === 'done') {
           completedHabits++;
         }

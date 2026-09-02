@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
+import { entryDateKey } from '../utils/dates';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import './DataExport.css';
@@ -25,7 +26,7 @@ const DataExport = ({ habits }) => {
           for (let d = new Date(monthStart); d <= monthEnd; d.setDate(d.getDate() + 1)) {
             totalDays++;
             const dateStr = format(new Date(d), 'yyyy-MM-dd');
-            const entry = habit.entries.find(e => format(new Date(e.date), 'yyyy-MM-dd') === dateStr);
+            const entry = habit.entries.find(e => entryDateKey(e.date) === dateStr);
             if (entry && entry.status === 'done') {
               completedDays++;
             }
@@ -70,7 +71,7 @@ const DataExport = ({ habits }) => {
           id: habit._id,
           name: habit.name,
           entries: habit.entries.map(entry => ({
-            date: format(new Date(entry.date), 'yyyy-MM-dd'),
+            date: entryDateKey(entry.date),
             status: entry.status,
           })),
         })),
@@ -132,7 +133,7 @@ const DataExport = ({ habits }) => {
           for (let d = new Date(monthStart); d <= monthEnd; d.setDate(d.getDate() + 1)) {
             totalDays++;
             const dateStr = format(new Date(d), 'yyyy-MM-dd');
-            const entry = habit.entries.find(e => format(new Date(e.date), 'yyyy-MM-dd') === dateStr);
+            const entry = habit.entries.find(e => entryDateKey(e.date) === dateStr);
             if (entry && entry.status === 'done') {
               completedDays++;
             }
@@ -185,7 +186,7 @@ const DataExport = ({ habits }) => {
           name: habit.name,
           createdAt: habit.createdAt,
           entries: habit.entries.map(entry => ({
-            date: format(new Date(entry.date), 'yyyy-MM-dd'),
+            date: entryDateKey(entry.date),
             status: entry.status,
           })),
         })),

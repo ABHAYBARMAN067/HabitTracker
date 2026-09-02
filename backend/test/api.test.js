@@ -22,3 +22,9 @@ test('protects habits when no session is present', async () => {
   const response = await fetch(`${baseUrl}/api/habits`);
   assert.equal(response.status, 401);
 });
+
+test('exposes a health endpoint for hosting checks', async () => {
+  const response = await fetch(`${baseUrl}/api/health`);
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { status: 'ok' });
+});

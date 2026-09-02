@@ -5,6 +5,7 @@ const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
 
 const router = express.Router();
+const jwtSecret = process.env.JWT_SECRET || (process.env.NODE_ENV !== 'production' ? 'development-secret-change-me' : null);
 const cookieOptions = {
   httpOnly: true,
   sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
@@ -14,7 +15,8 @@ const cookieOptions = {
 
 const sendAuthResponse = (res, user) => {
   const payload = { user: { id: user.id } };
-  const token = jwt.sign(payload, process.env.JWT_SECRET || 'development-secret-change-me', { expiresIn: '1h' });
+  if (!jwtSecret) throw new Error('JWT_SECRET must be configured in production');
+  const token = jwt.sign(payload, jwtSecret, { expiresIn: '1h' });
   res.cookie('token', token, cookieOptions);
   res.json({ token, user: { id: user.id, username: user.username, email: user.email, settings: user.settings } });
 };
