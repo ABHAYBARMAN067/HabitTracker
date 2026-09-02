@@ -18,6 +18,11 @@ test('rejects invalid registration input', async () => {
   assert.equal(response.status, 400);
 });
 
+test('validates password reset requests before attempting to send email', async () => {
+  const response = await fetch(`${baseUrl}/api/auth/forgot-password`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: 'invalid' }) });
+  assert.equal(response.status, 400);
+});
+
 test('protects habits when no session is present', async () => {
   const response = await fetch(`${baseUrl}/api/habits`);
   assert.equal(response.status, 401);

@@ -12,6 +12,7 @@ function App() {
   const appRef = useRef(null);
   const [token, setToken] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
+  const [resetToken, setResetToken] = useState(() => new URLSearchParams(window.location.search).get('resetToken'));
   const [currentView, setCurrentView] = useState('habit-tracker');
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -43,7 +44,17 @@ function App() {
 
   const openAuth = (login) => {
     setIsLogin(login);
+    if (login && resetToken) {
+      window.history.replaceState({}, '', window.location.pathname);
+      setResetToken(null);
+    }
     setIsProfileMenuOpen(false);
+  };
+
+  const finishPasswordReset = () => {
+    window.history.replaceState({}, '', window.location.pathname);
+    setResetToken(null);
+    setIsLogin(true);
   };
 
   const selectView = (view) => {
@@ -125,7 +136,7 @@ function App() {
       ) : (
         <main className="auth-view app-view">
           {isLogin ? (
-            <Login setToken={setToken} onSwitchToRegister={() => setIsLogin(false)} />
+            <Login setToken={setToken} onSwitchToRegister={() => setIsLogin(false)} resetToken={resetToken} onPasswordReset={finishPasswordReset} />
           ) : (
             <Register setToken={setToken} onSwitchToLogin={() => setIsLogin(true)} />
           )}

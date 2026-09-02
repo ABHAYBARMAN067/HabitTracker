@@ -3,7 +3,7 @@ import api from '../../api';
 import { weakPasswords } from '../utils/constants';
 import './Login.css';
 
-const Login = ({ setToken, onSwitchToRegister }) => {
+const Login = ({ setToken, onSwitchToRegister, resetToken, onPasswordReset }) => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -15,6 +15,9 @@ const Login = ({ setToken, onSwitchToRegister }) => {
   const [blinking, setBlinking] = useState(false);
   const [shake, setShake] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [forgotMode, setForgotMode] = useState(false);
+  const [resetPassword, setResetPassword] = useState('');
+  const [notice, setNotice] = useState('');
 
   const eyesRef = useRef([]);
 
@@ -158,6 +161,33 @@ const Login = ({ setToken, onSwitchToRegister }) => {
     }
   };
 
+  const requestPasswordReset = async (event) => {
+    event.preventDefault();
+    setError('');
+    setNotice('');
+    try {
+      const { data } = await api.post('/api/auth/forgot-password', { email: formData.email });
+      setNotice(data.msg);
+    } catch (err) {
+      setError(err.response?.data?.msg || 'Could not request a reset email.');
+    }
+  };
+
+  const submitNewPassword = async (event) => {
+    event.preventDefault();
+    setError('');
+    setNotice('');
+    if (resetPassword.length < 6) return setError('Password too short (min 6 characters).');
+    try {
+      await api.post('/api/auth/reset-password', { token: resetToken, password: resetPassword });
+      setNotice('Password reset successfully. You can now log in.');
+      setResetPassword('');
+      onPasswordReset();
+    } catch (err) {
+      setError(err.response?.data?.msg || 'Could not reset password.');
+    }
+  };
+
   return (
     <div className="login-screen">
       <div className={`login-box ${shake ? 'shake' : ''}`}>
@@ -181,7 +211,18 @@ const Login = ({ setToken, onSwitchToRegister }) => {
           ))}
         </div>
 
-        <form onSubmit={handleSubmit}>
+        {resetToken ? <form onSubmit={submitNewPassword}>
+          <p className="login-message">Choose a new password for your account.</p>
+          <div className="input-group"><input type="password" placeholder="New password" value={resetPassword} onChange={e => setResetPassword(e.target.value)} minLength="6" required /></div>
+          <p className="login-message">{error || notice}</p>
+          <button type="submit" className="login-button">Reset password</button>
+        </form> : forgotMode ? <form onSubmit={requestPasswordReset}>
+          <p className="login-message">Enter your email and we’ll send a reset link.</p>
+          <div className="input-group"><input type="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} required /></div>
+          <p className="login-message">{error || notice}</p>
+          <button type="submit" className="login-button">Send reset link</button>
+          <button type="button" className="switch-auth" onClick={() => { setForgotMode(false); setError(''); setNotice(''); }}>Back to login</button>
+        </form> : <form onSubmit={handleSubmit}>
 
           {/* Email */}
           <div className="input-group">
@@ -221,7 +262,7 @@ const Login = ({ setToken, onSwitchToRegister }) => {
           </div>
 
           <p className="login-message">
-            {error}
+            {error || notice}
           </p>
 
           <button
@@ -230,15 +271,17 @@ const Login = ({ setToken, onSwitchToRegister }) => {
           >
             Login
           </button>
+          <button type="button" className="switch-auth" onClick={() => { setForgotMode(true); setError(''); }}>Forgot password?</button>
         </form>
+        }
 
         {/* Register */}
-        <div className="switch-auth">
+        {!resetToken && !forgotMode && <div className="switch-auth">
           Need an account?{' '}
           <button onClick={onSwitchToRegister}>
             Register
           </button>
-        </div>
+        </div>}
 
         {/* Success */}
         <div
