@@ -4,14 +4,16 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
-const { isMailConfigured, sendPasswordResetEmail } = require('../services/mailer');
+const Otp = require('../models/Otp');
+const { isMailConfigured, sendPasswordResetEmail, sendRegisterOtpEmail } = require('../services/mailer');
 
 const router = express.Router();
 const jwtSecret = process.env.JWT_SECRET || (process.env.NODE_ENV !== 'production' ? 'development-secret-change-me' : null);
+const isProduction = process.env.NODE_ENV === 'production';
 const cookieOptions = {
   httpOnly: true,
-  sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-  secure: process.env.NODE_ENV === 'production',
+  sameSite: isProduction ? 'none' : 'lax',
+  secure: isProduction,
   maxAge: 60 * 60 * 1000,
 };
 
@@ -23,28 +25,111 @@ const sendAuthResponse = (res, user) => {
   res.json({ token, user: { id: user.id, username: user.username, email: user.email, settings: user.settings } });
 };
 
-// Register
-router.post('/register', [
-  body('username').isLength({ min: 3 }),
-  body('email').isEmail(),
-  body('password').isLength({ min: 6 }),
+// Check Session (graceful 200 OK check on app load)
+router.get('/session', async (req, res) => {
+  const legacyToken = req.header('x-auth-token') || req.cookies?.token;
+  const authHeader = req.header('Authorization') || req.header('authorization');
+  const token = legacyToken || (authHeader && authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : null);
+
+  if (!token) {
+    return res.json({ authenticated: false, user: null });
+  }
+
+  try {
+    if (!jwtSecret) return res.json({ authenticated: false, user: null });
+    const decoded = jwt.verify(token, jwtSecret);
+    const user = await User.findById(decoded.user?.id).select('-password');
+    if (!user) {
+      return res.json({ authenticated: false, user: null });
+    }
+    return res.json({
+      authenticated: true,
+      user: { id: user.id, username: user.username, email: user.email, settings: user.settings },
+    });
+  } catch (err) {
+    return res.json({ authenticated: false, user: null });
+  }
+});
+
+// Send Registration OTP
+router.post('/send-register-otp', [
+  body('username').trim().isLength({ min: 3 }).withMessage('Username must be at least 3 characters'),
+  body('email').trim().isEmail().normalizeEmail().withMessage('Please enter a valid email address'),
+  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
 ], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+    return res.status(400).json({ msg: errors.array()[0]?.msg || 'Invalid input' });
   }
 
   const username = req.body.username.trim();
   const email = req.body.email.trim().toLowerCase();
-  const { password } = req.body;
 
   try {
-    let user = await User.findOne({ email });
-    if (user) {
-      return res.status(400).json({ msg: 'User already exists' });
+    const existingUser = await User.findOne({ $or: [{ email }, { username }] });
+    if (existingUser) {
+      if (existingUser.email === email) {
+        return res.status(400).json({ msg: 'An account with this email already exists' });
+      }
+      return res.status(400).json({ msg: 'This username is already taken' });
     }
 
-    user = new User({
+    if (!isMailConfigured()) {
+      return res.status(503).json({ msg: 'Email service is not configured. Please contact the administrator.' });
+    }
+
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const hashedOtp = crypto.createHash('sha256').update(otp).digest('hex');
+
+    // Remove any previous OTP for this email and save new one
+    await Otp.deleteMany({ email });
+    await new Otp({ email, otp: hashedOtp }).save();
+
+    await sendRegisterOtpEmail({ email, username, otp });
+
+    return res.json({ msg: 'Verification code sent to your email.' });
+  } catch (err) {
+    console.error('Send OTP error:', err);
+    return res.status(500).json({ msg: 'Could not send verification email. Please try again.' });
+  }
+});
+
+// Register (with OTP verification)
+router.post('/register', [
+  body('username').trim().isLength({ min: 3 }).withMessage('Username must be at least 3 characters'),
+  body('email').trim().isEmail().normalizeEmail().withMessage('Please enter a valid email address'),
+  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+  body('otp').trim().isLength({ min: 6, max: 6 }).withMessage('Please enter a valid 6-digit OTP code'),
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ msg: errors.array()[0]?.msg || 'Invalid input' });
+  }
+
+  const username = req.body.username.trim();
+  const email = req.body.email.trim().toLowerCase();
+  const { password, otp } = req.body;
+
+  try {
+    let existingUser = await User.findOne({ $or: [{ email }, { username }] });
+    if (existingUser) {
+      if (existingUser.email === email) {
+        return res.status(400).json({ msg: 'An account with this email already exists' });
+      }
+      return res.status(400).json({ msg: 'This username is already taken' });
+    }
+
+    // Verify OTP
+    const hashedOtp = crypto.createHash('sha256').update(otp.trim()).digest('hex');
+    const otpRecord = await Otp.findOne({ email, otp: hashedOtp });
+
+    if (!otpRecord) {
+      return res.status(400).json({ msg: 'Invalid or expired verification code. Please request a new OTP.' });
+    }
+
+    // Create user
+    const user = new User({
       username,
       email,
       password: await bcrypt.hash(password, 10),
@@ -52,10 +137,13 @@ router.post('/register', [
 
     await user.save();
 
+    // Delete used OTP
+    await Otp.deleteMany({ email });
+
     sendAuthResponse(res, user);
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    console.error('Registration error:', err);
+    res.status(500).json({ msg: 'Server error during registration' });
   }
 });
 
@@ -124,8 +212,8 @@ router.post('/forgot-password', [body('email').isEmail().normalizeEmail()], asyn
 
     return res.json({ msg: 'If an account exists for that email, a reset link has been sent.' });
   } catch (err) {
-    console.error('Password reset request failed:', err.message);
-    return res.status(500).json({ msg: 'Server error' });
+    console.error('Password reset request failed:', err);
+    return res.status(500).json({ msg: err.message || 'Server error' });
   }
 });
 

@@ -14,16 +14,25 @@
 .register-btn:hover, .logout-btn:hover { background: var(--primary-hover); transform: translateY(-1px); }
 
 .notification-wrap, .profile-wrap { position: relative; }
-.notification-btn, .profile-btn { display: inline-flex; align-items: center; gap: 7px; min-height: 40px; color: var(--text-secondary); background: transparent; border-radius: 8px; font-size: .9rem; font-weight: 600; }
+.notification-btn, .profile-btn { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; color: var(--text-secondary); background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border); border-radius: 10px; font-size: .9rem; font-weight: 600; transition: all .25s ease; }
 .notification-btn { position: relative; justify-content: center; width: 40px; padding: 0; font-size: 1.05rem; }
-.notification-btn:hover, .profile-btn:hover { color: white; background: rgba(124, 58, 237, 0.14); }
+.notification-btn:hover, .notification-btn[aria-expanded="true"] { color: white; background: rgba(124, 58, 237, 0.16); border-color: rgba(124, 58, 237, 0.4); box-shadow: 0 0 12px rgba(124, 58, 237, 0.2); }
 .notification-badge { position: absolute; top: 3px; right: 2px; display: grid; min-width: 16px; height: 16px; place-items: center; color: white; background: #ef4444; border: 2px solid var(--card); border-radius: 50%; font-size: .62rem; }
-.profile-btn { padding: 0 9px 0 4px; }.profile-avatar { font-size: 1.15rem; }.chevron { color: var(--text-muted); font-size: 1rem; }
+.profile-btn { padding: 4px 12px 4px 8px; }
+.profile-btn:hover, .profile-btn.open { color: white; background: rgba(124, 58, 237, 0.16); border-color: rgba(124, 58, 237, 0.45); box-shadow: 0 0 15px rgba(124, 58, 237, 0.25); }
+.profile-avatar { font-size: 1.15rem; display: flex; align-items: center; justify-content: center; }
+.chevron-icon { width: 14px; height: 14px; color: var(--text-muted); transition: transform .3s cubic-bezier(0.4, 0, 0.2, 1), color .25s ease; flex-shrink: 0; }
+.profile-btn:hover .chevron-icon { color: var(--accent); }
+.profile-btn.open .chevron-icon { transform: rotate(180deg); color: var(--accent); }
 
-.profile-menu, .notification-popover { position: absolute; top: calc(100% + 10px); right: 0; width: 205px; padding: 7px; background: #161d2b; border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 16px 35px rgba(0, 0, 0, .35); }
-.profile-menu button { width: 100%; padding: 10px 11px; color: var(--text-secondary); background: transparent; border: 0; border-radius: 6px; cursor: pointer; font: inherit; font-size: .9rem; text-align: left; }
-.profile-menu button:hover { background: rgba(124, 58, 237, .16); color: white; }.profile-menu .menu-logout { color: #fca5a5; }
-.notification-popover { display: flex; flex-direction: column; gap: 5px; width: 245px; padding: 14px; color: var(--text-secondary); font-size: .83rem; }.notification-popover strong { color: var(--text); }
+.profile-menu, .notification-popover { position: absolute; top: calc(100% + 10px); right: 0; width: 215px; padding: 8px; background: #161d2b; border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 18px 40px rgba(0, 0, 0, .45); backdrop-filter: blur(16px); z-index: 50; animation: menuFadeIn .2s cubic-bezier(0.16, 1, 0.3, 1); }
+@keyframes menuFadeIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+.profile-menu button { width: 100%; padding: 10px 12px; color: var(--text-secondary); background: transparent; border: 0; border-radius: 8px; cursor: pointer; font: inherit; font-size: .9rem; text-align: left; display: flex; align-items: center; gap: 8px; transition: all .2s ease; }
+.profile-menu button:hover { background: rgba(124, 58, 237, .18); color: white; transform: translateX(3px); }
+.profile-menu .menu-logout { color: #fca5a5; margin-top: 4px; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 11px; }
+.profile-menu .menu-logout:hover { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+.notification-popover { display: flex; flex-direction: column; gap: 5px; width: 245px; padding: 14px; color: var(--text-secondary); font-size: .83rem; }
+.notification-popover strong { color: var(--text); }
 
 .auth-view { min-height: calc(100vh - 72px); }
 .account-panel { max-width: 680px; margin: 64px auto; padding: 42px; color: var(--text-secondary); background: var(--card); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 18px 45px rgba(0, 0, 0, .2); text-align: center; }

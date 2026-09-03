@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import api from '../../api';
+import api from '../api';
 import { eachDayOfInterval, endOfMonth, format, startOfMonth } from 'date-fns';
 import { gsap } from 'gsap';
 import { entryDateKey } from '../utils/dates';

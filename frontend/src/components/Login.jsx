@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import api from '../../api';
+import api from '../api';
 import { weakPasswords } from '../utils/constants';
 import './Login.css';
 
@@ -191,8 +191,7 @@ const Login = ({ setToken, onSwitchToRegister, resetToken, onPasswordReset }) =>
   return (
     <div className="login-screen">
       <div className={`login-box ${shake ? 'shake' : ''}`}>
-
-        <h2>Welcome Back</h2>
+        <h2>{resetToken ? 'Reset Password' : forgotMode ? 'Forgot Password' : 'Welcome Back'}</h2>
 
         {/* 👀 Eyes */}
         <div className="eyes-container">
@@ -211,88 +210,157 @@ const Login = ({ setToken, onSwitchToRegister, resetToken, onPasswordReset }) =>
           ))}
         </div>
 
-        {resetToken ? <form onSubmit={submitNewPassword}>
-          <p className="login-message">Choose a new password for your account.</p>
-          <div className="input-group"><input type="password" placeholder="New password" value={resetPassword} onChange={e => setResetPassword(e.target.value)} minLength="6" required /></div>
-          <p className="login-message">{error || notice}</p>
-          <button type="submit" className="login-button">Reset password</button>
-        </form> : forgotMode ? <form onSubmit={requestPasswordReset}>
-          <p className="login-message">Enter your email and we’ll send a reset link.</p>
-          <div className="input-group"><input type="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} required /></div>
-          <p className="login-message">{error || notice}</p>
-          <button type="submit" className="login-button">Send reset link</button>
-          <button type="button" className="switch-auth" onClick={() => { setForgotMode(false); setError(''); setNotice(''); }}>Back to login</button>
-        </form> : <form onSubmit={handleSubmit}>
-
-          {/* Email */}
-          <div className="input-group">
-            <input
-              type="email"
-              name="email"
-              placeholder="Email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          {/* Password */}
-          <div className="input-group">
-            <input
-              type={
-                showPassword
-                  ? 'text'
-                  : 'password'
-              }
-              name="password"
-              placeholder="Password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-            />
-
-            <span
-              className="input-icon"
-              onClick={() =>
-                setShowPassword(!showPassword)
-              }
+        {resetToken ? (
+          <form onSubmit={submitNewPassword}>
+            <p className="login-message instruction">Choose a new password for your account.</p>
+            <div className="input-group">
+              <input
+                type="password"
+                placeholder="New password"
+                value={resetPassword}
+                onChange={(e) => setResetPassword(e.target.value)}
+                minLength="6"
+                required
+              />
+            </div>
+            {(error || notice) && (
+              <p className={`login-message ${error ? 'error' : 'notice'}`}>
+                {error || notice}
+              </p>
+            )}
+            <button type="submit" className="login-button">
+              Reset password
+            </button>
+          </form>
+        ) : forgotMode ? (
+          <form onSubmit={requestPasswordReset}>
+            <p className="login-message instruction">
+              Enter your email and we’ll send you a password reset link.
+            </p>
+            <div className="input-group">
+              <input
+                type="email"
+                name="email"
+                placeholder="Email address"
+                value={formData.email}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            {(error || notice) && (
+              <p className={`login-message ${error ? 'error' : 'notice'}`}>
+                {error || notice}
+              </p>
+            )}
+            <button type="submit" className="login-button">
+              Send Reset Link
+            </button>
+            <button
+              type="button"
+              className="secondary-btn"
+              onClick={() => {
+                setForgotMode(false);
+                setError('');
+                setNotice('');
+              }}
             >
-              {showPassword ? '🔒' : '👁️'}
-            </span>
+              ← Back to Login
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={handleSubmit}>
+            {/* Email */}
+            <div className="input-group">
+              <input
+                type="email"
+                name="email"
+                placeholder="Email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
+            {/* Password */}
+            <div className="input-group">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                name="password"
+                placeholder="Password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+              />
+
+              <span
+                className="input-icon"
+                onClick={() => setShowPassword(!showPassword)}
+                title={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? '🔒' : '👁️'}
+              </span>
+            </div>
+
+            {error && (
+              <p className="login-message error">
+                {error}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              className="login-button"
+            >
+              Login
+            </button>
+          </form>
+        )}
+
+        {/* Switch Auth Options */}
+        {!resetToken && !forgotMode && (
+          <div className="auth-links-group">
+            <div className="switch-auth">
+              <span>Forgot password?</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setForgotMode(true);
+                  setError('');
+                  setNotice('');
+                }}
+              >
+                Reset Password
+              </button>
+            </div>
+
+            <div className="switch-auth">
+              <span>Need an account?</span>
+              <button type="button" onClick={onSwitchToRegister}>
+                Register
+              </button>
+            </div>
           </div>
+        )}
 
-          <p className="login-message">
-            {error || notice}
-          </p>
-
-          <button
-            type="submit"
-            className="login-button"
-          >
-            Login
-          </button>
-          <button type="button" className="switch-auth" onClick={() => { setForgotMode(true); setError(''); }}>Forgot password?</button>
-        </form>
-        }
-
-        {/* Register */}
-        {!resetToken && !forgotMode && <div className="switch-auth">
-          Need an account?{' '}
-          <button onClick={onSwitchToRegister}>
-            Register
-          </button>
-        </div>}
+        {forgotMode && !resetToken && (
+          <div className="switch-auth">
+            <span>Remember your password?</span>
+            <button
+              type="button"
+              onClick={() => {
+                setForgotMode(false);
+                setError('');
+                setNotice('');
+              }}
+            >
+              Login
+            </button>
+          </div>
+        )}
 
         {/* Success */}
-        <div
-          className={`success ${
-            success ? 'active' : ''
-          }`}
-        >
-          <svg
-            className="checkmark"
-            viewBox="0 0 52 52"
-          >
+        <div className={`success ${success ? 'active' : ''}`}>
+          <svg className="checkmark" viewBox="0 0 52 52">
             <circle
               className="checkmark__circle"
               cx="26"
@@ -300,17 +368,14 @@ const Login = ({ setToken, onSwitchToRegister, resetToken, onPasswordReset }) =>
               r="25"
               fill="none"
             />
-
             <path
               className="checkmark__check"
               fill="none"
               d="M14.1 27.2l7.1 7.2 16.7-16.8"
             />
           </svg>
-
           <h3>Access Granted!</h3>
         </div>
-
       </div>
     </div>
   );

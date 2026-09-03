@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import api from '../../api';
+import api from '../api';
 import { weakPasswords } from '../utils/constants';
 import './Register.css';
 
@@ -10,6 +10,11 @@ const Register = ({ setToken, onSwitchToLogin }) => {
     password: '',
   });
 
+  const [step, setStep] = useState('form'); // 'form' | 'otp'
+  const [otp, setOtp] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [resendTimer, setResendTimer] = useState(0);
+  const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [strength, setStrength] = useState({
@@ -25,6 +30,7 @@ const Register = ({ setToken, onSwitchToLogin }) => {
   const [success, setSuccess] = useState(false);
 
   const eyesRef = useRef([]);
+  const otpInputRef = useRef(null);
 
   // 👀 Eye movement
   useEffect(() => {
@@ -97,6 +103,22 @@ const Register = ({ setToken, onSwitchToLogin }) => {
       clearTimeout(innerTimeout);
     };
   }, []);
+
+  // ⏳ Resend countdown timer
+  useEffect(() => {
+    if (resendTimer <= 0) return;
+    const interval = setInterval(() => {
+      setResendTimer((prev) => Math.max(0, prev - 1));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [resendTimer]);
+
+  // Focus OTP input when entering OTP step
+  useEffect(() => {
+    if (step === 'otp' && otpInputRef.current) {
+      otpInputRef.current.focus();
+    }
+  }, [step]);
 
   const checkPasswordStrength = (password) => {
     if (!password) {
@@ -176,7 +198,6 @@ const Register = ({ setToken, onSwitchToLogin }) => {
 
     if (name === 'password') {
       const result = checkPasswordStrength(value);
-
       setStrength(result);
 
       if (weakPasswords.includes(value.toLowerCase())) {
@@ -189,42 +210,98 @@ const Register = ({ setToken, onSwitchToLogin }) => {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const triggerShake = () => {
+    setShake(true);
+    setTimeout(() => {
+      setShake(false);
+    }, 500);
+  };
+
+  // Step 1: Send OTP to Email
+  const handleRequestOtp = async (e) => {
     e.preventDefault();
+    setError('');
+    setNotice('');
+
+    if (formData.username.trim().length < 3) {
+      setError('Username must be at least 3 characters');
+      triggerShake();
+      return;
+    }
 
     const result = checkPasswordStrength(formData.password);
-
     if (result.score <= 1) {
+      setError('Password too weak! Please use a stronger password.');
+      triggerShake();
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { data } = await api.post('/api/auth/send-register-otp', {
+        username: formData.username.trim(),
+        email: formData.email.trim(),
+        password: formData.password,
+      });
+
+      setStep('otp');
+      setNotice(data.msg || 'Verification code sent to your email.');
+      setResendTimer(60);
+    } catch (err) {
       setError(
-        'Password too weak! The eyes are not pleased.'
+        err.response?.data?.msg ||
+        err.response?.data?.errors?.[0]?.msg ||
+        'Could not send verification code. Please check your details.'
       );
-
-      setShake(true);
-
-      setTimeout(() => {
-        setShake(false);
-      }, 500);
-
-      return;
+      triggerShake();
+    } finally {
+      setLoading(false);
     }
+  };
 
-    if (formData.username.length < 3) {
-      setError('Username too short!');
-
-      setShake(true);
-
-      setTimeout(() => {
-        setShake(false);
-      }, 500);
-
-      return;
-    }
+  // Step 2: Resend OTP
+  const handleResendOtp = async () => {
+    if (resendTimer > 0 || loading) return;
+    setError('');
+    setNotice('');
+    setLoading(true);
 
     try {
-      await api.post(
-        '/api/auth/register',
-        formData
-      );
+      const { data } = await api.post('/api/auth/send-register-otp', {
+        username: formData.username.trim(),
+        email: formData.email.trim(),
+        password: formData.password,
+      });
+      setNotice(data.msg || 'A new verification code has been sent.');
+      setResendTimer(60);
+    } catch (err) {
+      setError(err.response?.data?.msg || 'Could not resend verification code.');
+      triggerShake();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Step 3: Verify OTP & Complete Registration
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    setError('');
+    setNotice('');
+
+    if (!otp.trim() || otp.trim().length !== 6) {
+      setError('Please enter the 6-digit verification code.');
+      triggerShake();
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await api.post('/api/auth/register', {
+        username: formData.username.trim(),
+        email: formData.email.trim(),
+        password: formData.password,
+        otp: otp.trim(),
+      });
 
       setError('');
       setSuccess(true);
@@ -242,23 +319,24 @@ const Register = ({ setToken, onSwitchToLogin }) => {
           message: '',
           feedback: '',
         });
-
         setToken(true);
-      }, 3000);
+      }, 2000);
     } catch (err) {
       setError(
         err.response?.data?.msg ||
-        'An error occurred'
+        err.response?.data?.errors?.[0]?.msg ||
+        'Invalid verification code. Please try again.'
       );
+      triggerShake();
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="register-screen">
-      <div
-        className={`register-box ${shake ? 'shake' : ''}`}
-      >
-        <h2>Create Account</h2>
+      <div className={`register-box ${shake ? 'shake' : ''}`}>
+        <h2>{step === 'otp' ? 'Verify Email' : 'Create Account'}</h2>
 
         {/* 👀 Eyes */}
         <div className="eyes-container">
@@ -277,96 +355,145 @@ const Register = ({ setToken, onSwitchToLogin }) => {
           ))}
         </div>
 
-        <form onSubmit={handleSubmit}>
-          {/* Username */}
-          <div className="input-group">
-            <input
-              type="text"
-              name="username"
-              placeholder="Username"
-              value={formData.username}
-              onChange={handleChange}
-              required
-            />
-          </div>
+        {step === 'otp' ? (
+          <form onSubmit={handleVerifyOtp} className="otp-form">
+            <p className="register-instruction">
+              Enter the 6-digit code sent to <br />
+              <strong className="email-highlight">{formData.email}</strong>
+            </p>
 
-          {/* Email */}
-          <div className="input-group">
-            <input
-              type="email"
-              name="email"
-              placeholder="Email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-            />
-          </div>
+            <div className="input-group otp-group">
+              <input
+                ref={otpInputRef}
+                type="text"
+                maxLength="6"
+                placeholder="000000"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                className="otp-input"
+                required
+                autoComplete="one-time-code"
+              />
+            </div>
 
-          {/* Password */}
-          <div className="input-group">
-            <input
-              type={showPassword ? 'text' : 'password'}
-              name="password"
-              placeholder="Password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-            />
+            {notice && <p className="register-notice">{notice}</p>}
+            {error && <p className="register-message">{error}</p>}
 
-            <span
-              className="input-icon"
-              onClick={() =>
-                setShowPassword(!showPassword)
-              }
+            <button
+              type="submit"
+              className="register-button"
+              disabled={loading || otp.length !== 6}
             >
-              {showPassword ? '🔒' : '👁️'}
-            </span>
-          </div>
+              {loading ? 'Verifying...' : 'Verify & Create Account'}
+            </button>
 
-          {/* Password Strength */}
-          <div className="password-strength">
-            <div
-              className={`password-strength-bar strength-${strength.score}`}
-              style={{
-                width: `${strength.percentage}%`,
-              }}
-            />
-          </div>
+            <div className="otp-actions">
+              <button
+                type="button"
+                className="otp-resend-btn"
+                onClick={handleResendOtp}
+                disabled={resendTimer > 0 || loading}
+              >
+                {resendTimer > 0 ? `Resend code in ${resendTimer}s` : 'Resend OTP'}
+              </button>
 
-          <div className="feedback">
-            {strength.message}
-          </div>
+              <button
+                type="button"
+                className="otp-back-btn"
+                onClick={() => {
+                  setStep('form');
+                  setError('');
+                  setNotice('');
+                  setOtp('');
+                }}
+              >
+                ← Edit Details
+              </button>
+            </div>
+          </form>
+        ) : (
+          <form onSubmit={handleRequestOtp}>
+            {/* Username */}
+            <div className="input-group">
+              <input
+                type="text"
+                name="username"
+                placeholder="Username"
+                value={formData.username}
+                onChange={handleChange}
+                required
+              />
+            </div>
 
-          <p className="register-message">
-            {error}
-          </p>
+            {/* Email */}
+            <div className="input-group">
+              <input
+                type="email"
+                name="email"
+                placeholder="Email address"
+                value={formData.email}
+                onChange={handleChange}
+                required
+              />
+            </div>
 
-          <button
-            type="submit"
-            className="register-button"
-          >
-            Register
-          </button>
-        </form>
+            {/* Password */}
+            <div className="input-group">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                name="password"
+                placeholder="Password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+              />
+
+              <span
+                className="input-icon"
+                onClick={() => setShowPassword(!showPassword)}
+                title={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? '🔒' : '👁️'}
+              </span>
+            </div>
+
+            {/* Password Strength */}
+            <div className="password-strength">
+              <div
+                className={`password-strength-bar strength-${strength.score}`}
+                style={{
+                  width: `${strength.percentage}%`,
+                }}
+              />
+            </div>
+
+            <div className="feedback">{strength.message}</div>
+
+            {error && <p className="register-message">{error}</p>}
+
+            <button
+              type="submit"
+              className="register-button"
+              disabled={loading}
+            >
+              {loading ? 'Sending OTP...' : 'Continue & Verify Email'}
+            </button>
+          </form>
+        )}
 
         {/* Switch Login */}
-        <div className="switch-auth">
-          Already have an account?{' '}
-          <button onClick={onSwitchToLogin}>
-            Login
-          </button>
-        </div>
+        {step === 'form' && (
+          <div className="switch-auth">
+            <span>Already have an account?</span>
+            <button type="button" onClick={onSwitchToLogin}>
+              Login
+            </button>
+          </div>
+        )}
 
         {/* Success */}
-        <div
-          className={`success ${
-            success ? 'active' : ''
-          }`}
-        >
-          <svg
-            className="checkmark"
-            viewBox="0 0 52 52"
-          >
+        <div className={`success ${success ? 'active' : ''}`}>
+          <svg className="checkmark" viewBox="0 0 52 52">
             <circle
               className="checkmark__circle"
               cx="26"
@@ -374,14 +501,12 @@ const Register = ({ setToken, onSwitchToLogin }) => {
               r="25"
               fill="none"
             />
-
             <path
               className="checkmark__check"
               fill="none"
               d="M14.1 27.2l7.1 7.2 16.7-16.8"
             />
           </svg>
-
           <h3>Account Created!</h3>
         </div>
       </div>

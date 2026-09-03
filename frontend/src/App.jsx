@@ -5,7 +5,7 @@ import Register from './components/Register';
 import HabitTracker from './components/HabitTracker';
 import Dashboard from './components/Dashboard';
 import ProfileSettings from './components/ProfileSettings';
-import api from '../api';
+import api from './api';
 import './App.css';
 
 function App() {
@@ -18,8 +18,8 @@ function App() {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
   useEffect(() => {
-    api.get('/api/users/me')
-      .then(() => setToken(true))
+    api.get('/api/auth/session')
+      .then(({ data }) => setToken(Boolean(data?.authenticated)))
       .catch(() => setToken(false));
   }, []);
 
@@ -99,13 +99,27 @@ function App() {
               <div className="profile-wrap">
                 <button
                   type="button"
-                  className="profile-btn"
+                  className={`profile-btn ${isProfileMenuOpen ? 'open' : ''}`}
                   onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
                   aria-expanded={isProfileMenuOpen}
                 >
                   <span className="profile-avatar" aria-hidden="true">👤</span>
                   <span>Profile</span>
-                  <span className="chevron" aria-hidden="true">⌄</span>
+                  <svg
+                    className="chevron-icon"
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M5 7.5L10 12.5L15 7.5"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
                 </button>
                 {isProfileMenuOpen && (
                   <div className="profile-menu">
