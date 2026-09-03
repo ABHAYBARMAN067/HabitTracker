@@ -23,6 +23,11 @@ test('validates password reset requests before attempting to send email', async 
   assert.equal(response.status, 400);
 });
 
+test('rejects invalid password reset verification input', async () => {
+  const response = await fetch(`${baseUrl}/api/auth/reset-password`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: 'user@example.com', otp: '12', password: '123' }) });
+  assert.equal(response.status, 400);
+});
+
 test('protects habits when no session is present', async () => {
   const response = await fetch(`${baseUrl}/api/habits`);
   assert.equal(response.status, 401);

@@ -637,6 +637,123 @@
   }
 }
 
+/* OTP Verification UI */
+.email-highlight {
+  color: #00f2fe;
+  font-weight: 600;
+  text-shadow: 0 0 8px rgba(0, 242, 254, 0.4);
+}
+
+.otp-group {
+  margin: 10px 0 20px 0;
+}
+
+.otp-input {
+  text-align: center !important;
+  font-size: 28px !important;
+  font-weight: 700 !important;
+  letter-spacing: 12px !important;
+  font-family: monospace !important;
+  color: #00ffff !important;
+  background: rgba(0, 242, 254, 0.08) !important;
+  border: 1.5px solid rgba(0, 255, 255, 0.4) !important;
+  box-shadow: inset 0 0 15px rgba(0, 255, 255, 0.15) !important;
+  padding: 12px 16px !important;
+}
+
+.otp-input:focus {
+  border-color: #00ffff !important;
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.4), inset 0 0 20px rgba(0, 255, 255, 0.25) !important;
+}
+
+.otp-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.otp-resend-btn {
+  background: transparent !important;
+  border: none !important;
+  color: rgba(0, 255, 255, 0.85) !important;
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 4px;
+  transition: all 0.25s ease;
+}
+
+.otp-resend-btn:disabled {
+  color: rgba(255, 255, 255, 0.4) !important;
+  cursor: not-allowed;
+}
+
+.otp-resend-btn:not(:disabled):hover {
+  color: #ffffff !important;
+  text-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+}
+
+.otp-back-btn {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(0, 255, 255, 0.25) !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+  padding: 10px 18px !important;
+  border-radius: 10px !important;
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.otp-back-btn:hover {
+  background: rgba(0, 255, 255, 0.15) !important;
+  color: #ffffff !important;
+  border-color: rgba(0, 255, 255, 0.5) !important;
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.2) !important;
+}
+
+/* Password Strength */
+.password-strength {
+  height: 5px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  margin-top: 10px;
+  overflow: hidden;
+}
+
+.password-strength-bar {
+  height: 100%;
+  transition: all 0.3s ease;
+}
+
+.strength-0,
+.strength-1 {
+  background: #ff4d4d;
+}
+
+.strength-2,
+.strength-3 {
+  background: #ffd633;
+}
+
+.strength-4,
+.strength-5 {
+  background: #66cc33;
+}
+
+/* Feedback */
+.feedback {
+  margin-top: 10px;
+  margin-bottom: 6px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 13.5px;
+  min-height: 16px;
+}
+
 @media (max-width: 460px) {
   .login-box {
     padding: 30px 20px;

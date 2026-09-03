@@ -5,7 +5,7 @@ const crypto = require('crypto');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
 const Otp = require('../models/Otp');
-const { isMailConfigured, sendPasswordResetEmail, sendRegisterOtpEmail } = require('../services/mailer');
+const { isMailConfigured, sendPasswordResetOtpEmail, sendRegisterOtpEmail } = require('../services/mailer');
 
 const router = express.Router();
 const jwtSecret = process.env.JWT_SECRET || (process.env.NODE_ENV !== 'production' ? 'development-secret-change-me' : null);
@@ -192,51 +192,62 @@ router.post('/forgot-password', [body('email').isEmail().normalizeEmail()], asyn
     const email = req.body.email.trim().toLowerCase();
     const user = await User.findOne({ email });
 
-    // Always return the same response so this endpoint cannot reveal registered emails.
-    if (!user) return res.json({ msg: 'If an account exists for that email, a reset link has been sent.' });
+    // Return safe message without leaking registered emails
+    if (!user) return res.json({ msg: 'If an account exists for that email, a verification code has been sent.' });
 
-    const token = crypto.randomBytes(32).toString('hex');
-    user.passwordResetToken = crypto.createHash('sha256').update(token).digest('hex');
-    user.passwordResetExpires = new Date(Date.now() + 60 * 60 * 1000);
-    await user.save();
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const hashedOtp = crypto.createHash('sha256').update(otp).digest('hex');
 
-    try {
-      await sendPasswordResetEmail({ email: user.email, username: user.username, token });
-    } catch (mailError) {
-      user.passwordResetToken = undefined;
-      user.passwordResetExpires = undefined;
-      await user.save();
-      console.error('Password reset email failed:', mailError.message);
-      return res.status(502).json({ msg: 'Unable to send reset email. Please try again later.' });
-    }
+    // Remove any previous OTP for this email and save new one
+    await Otp.deleteMany({ email });
+    await new Otp({ email, otp: hashedOtp }).save();
 
-    return res.json({ msg: 'If an account exists for that email, a reset link has been sent.' });
+    await sendPasswordResetOtpEmail({ email: user.email, username: user.username, otp });
+
+    return res.json({ msg: 'Verification code sent to your email.' });
   } catch (err) {
-    console.error('Password reset request failed:', err);
-    return res.status(500).json({ msg: err.message || 'Server error' });
+    console.error('Password reset OTP request failed:', err);
+    return res.status(500).json({ msg: 'Could not send verification code. Please try again later.' });
   }
 });
 
 router.post('/reset-password', [
-  body('token').isLength({ min: 64, max: 64 }).isHexadecimal(),
-  body('password').isLength({ min: 6 }),
+  body('email').isEmail().normalizeEmail().withMessage('Please enter a valid email address'),
+  body('otp').trim().isLength({ min: 6, max: 6 }).withMessage('Please enter a valid 6-digit OTP code'),
+  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
 ], async (req, res) => {
   const errors = validationResult(req);
-  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+  if (!errors.isEmpty()) return res.status(400).json({ msg: errors.array()[0]?.msg || 'Invalid input' });
+
+  const email = req.body.email.trim().toLowerCase();
+  const { otp, password } = req.body;
 
   try {
-    const hashedToken = crypto.createHash('sha256').update(req.body.token).digest('hex');
-    const user = await User.findOne({ passwordResetToken: hashedToken, passwordResetExpires: { $gt: new Date() } });
-    if (!user) return res.status(400).json({ msg: 'This reset link is invalid or has expired.' });
+    const hashedOtp = crypto.createHash('sha256').update(otp.trim()).digest('hex');
+    const otpRecord = await Otp.findOne({ email, otp: hashedOtp });
 
-    user.password = await bcrypt.hash(req.body.password, 10);
+    if (!otpRecord) {
+      return res.status(400).json({ msg: 'Invalid or expired verification code. Please request a new OTP.' });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ msg: 'User account not found.' });
+    }
+
+    user.password = await bcrypt.hash(password, 10);
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;
     await user.save();
-    return res.status(204).end();
+
+    // Delete used OTP
+    await Otp.deleteMany({ email });
+
+    return res.json({ msg: 'Password reset successfully. You can now log in.' });
   } catch (err) {
     console.error('Password reset failed:', err.message);
-    return res.status(500).json({ msg: 'Server error' });
+    return res.status(500).json({ msg: 'Server error during password reset' });
   }
 });
 

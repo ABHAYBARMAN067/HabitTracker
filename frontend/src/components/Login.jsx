@@ -3,23 +3,39 @@ import api from '../api';
 import { weakPasswords } from '../utils/constants';
 import './Login.css';
 
-const Login = ({ setToken, onSwitchToRegister, resetToken, onPasswordReset }) => {
+const Login = ({ setToken, onSwitchToRegister }) => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
 
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [suspicious, setSuspicious] = useState(false);
   const [blinking, setBlinking] = useState(false);
   const [shake, setShake] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('Access Granted!');
+
+  // Forgot password OTP flow states
   const [forgotMode, setForgotMode] = useState(false);
-  const [resetPassword, setResetPassword] = useState('');
-  const [notice, setNotice] = useState('');
+  const [forgotStep, setForgotStep] = useState('email'); // 'email' | 'otp'
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [resetOtp, setResetOtp] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [resendTimer, setResendTimer] = useState(0);
+  const [strength, setStrength] = useState({
+    score: 0,
+    percentage: 0,
+    message: '',
+    feedback: '',
+  });
 
   const eyesRef = useRef([]);
+  const otpInputRef = useRef(null);
 
   /* 👀 Eye movement */
   useEffect(() => {
@@ -63,10 +79,7 @@ const Login = ({ setToken, onSwitchToRegister, resetToken, onPasswordReset }) =>
     document.addEventListener('mousemove', handleMouseMove);
 
     return () => {
-      document.removeEventListener(
-        'mousemove',
-        handleMouseMove
-      );
+      document.removeEventListener('mousemove', handleMouseMove);
     };
   }, []);
 
@@ -96,6 +109,88 @@ const Login = ({ setToken, onSwitchToRegister, resetToken, onPasswordReset }) =>
     };
   }, []);
 
+  /* ⏳ Resend countdown timer */
+  useEffect(() => {
+    if (resendTimer <= 0) return;
+    const interval = setInterval(() => {
+      setResendTimer((prev) => Math.max(0, prev - 1));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [resendTimer]);
+
+  /* Focus OTP input when entering OTP step */
+  useEffect(() => {
+    if (forgotMode && forgotStep === 'otp' && otpInputRef.current) {
+      otpInputRef.current.focus();
+    }
+  }, [forgotMode, forgotStep]);
+
+  const triggerShake = () => {
+    setShake(true);
+    setTimeout(() => {
+      setShake(false);
+    }, 500);
+  };
+
+  const checkPasswordStrength = (password) => {
+    if (!password) {
+      return { score: 0, percentage: 0, message: '', feedback: '' };
+    }
+
+    let score = 0;
+    const feedback = [];
+
+    if (password.length < 8) {
+      feedback.push('Password is too short');
+    } else {
+      score += 1;
+    }
+
+    if (weakPasswords.includes(password.toLowerCase())) {
+      feedback.push('Password is too common');
+      score = 0;
+    }
+
+    if (/\d/.test(password)) {
+      score += 1;
+    } else {
+      feedback.push('Add numbers');
+    }
+
+    if (/[A-Z]/.test(password)) {
+      score += 1;
+    } else {
+      feedback.push('Add uppercase letters');
+    }
+
+    if (/[a-z]/.test(password)) {
+      score += 1;
+    }
+
+    if (/[^A-Za-z0-9]/.test(password)) {
+      score += 1;
+    } else {
+      feedback.push('Add special characters');
+    }
+
+    score = Math.min(score, 5);
+
+    let message = '';
+    if (score === 0) message = 'Very weak';
+    else if (score === 1) message = 'Weak';
+    else if (score === 2) message = 'Fair';
+    else if (score === 3) message = 'Good';
+    else if (score === 4) message = 'Strong';
+    else message = 'Very strong';
+
+    return {
+      score,
+      percentage: (score / 5) * 100,
+      message,
+      feedback: feedback.length > 0 ? feedback.join(', ') : 'Password is adequate',
+    };
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -106,9 +201,7 @@ const Login = ({ setToken, onSwitchToRegister, resetToken, onPasswordReset }) =>
 
     if (name === 'password') {
       if (weakPasswords.includes(value.toLowerCase())) {
-        setError(
-          'Too weak! The eyes know this password 👀'
-        );
+        setError('Too weak! The eyes know this password 👀');
         setSuspicious(true);
       } else {
         setError('');
@@ -117,30 +210,35 @@ const Login = ({ setToken, onSwitchToRegister, resetToken, onPasswordReset }) =>
     }
   };
 
+  const handleNewPasswordChange = (e) => {
+    const value = e.target.value;
+    setNewPassword(value);
+    const result = checkPasswordStrength(value);
+    setStrength(result);
+
+    if (weakPasswords.includes(value.toLowerCase())) {
+      setError('Too weak! The eyes know this password 👀');
+      setSuspicious(true);
+    } else {
+      setError('');
+      setSuspicious(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
     if (formData.password.length < 6) {
-      setError(
-        'Password too short (min 6 characters).'
-      );
-
-      setShake(true);
-
-      setTimeout(() => {
-        setShake(false);
-      }, 500);
-
+      setError('Password too short (min 6 characters).');
+      triggerShake();
       return;
     }
 
     try {
-      await api.post(
-        '/api/auth/login',
-        formData
-      );
+      await api.post('/api/auth/login', formData);
 
+      setSuccessMessage('Access Granted!');
       setSuccess(true);
 
       setTimeout(() => {
@@ -150,48 +248,141 @@ const Login = ({ setToken, onSwitchToRegister, resetToken, onPasswordReset }) =>
     } catch (err) {
       setError(
         err.response?.data?.msg ||
+        err.response?.data?.errors?.[0]?.msg ||
         'Invalid email or password'
       );
+      triggerShake();
+    }
+  };
 
-      setShake(true);
+  // Step 1: Send Reset OTP
+  const handleRequestResetOtp = async (e) => {
+    e.preventDefault();
+    setError('');
+    setNotice('');
+
+    const email = forgotEmail.trim() || formData.email.trim();
+    if (!email) {
+      setError('Please enter your email address.');
+      triggerShake();
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { data } = await api.post('/api/auth/forgot-password', { email });
+      setForgotEmail(email);
+      setForgotStep('otp');
+      setNotice(data.msg || 'Verification code sent to your email.');
+      setResendTimer(60);
+    } catch (err) {
+      setError(
+        err.response?.data?.msg ||
+        err.response?.data?.errors?.[0]?.msg ||
+        'Could not send reset code. Please try again.'
+      );
+      triggerShake();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Step 2: Resend Reset OTP
+  const handleResendResetOtp = async () => {
+    if (resendTimer > 0 || loading) return;
+    setError('');
+    setNotice('');
+    setLoading(true);
+
+    try {
+      const { data } = await api.post('/api/auth/forgot-password', { email: forgotEmail });
+      setNotice(data.msg || 'A new verification code has been sent.');
+      setResendTimer(60);
+    } catch (err) {
+      setError(err.response?.data?.msg || 'Could not resend verification code.');
+      triggerShake();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Step 3: Verify OTP & Reset Password
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    setError('');
+    setNotice('');
+
+    if (!resetOtp.trim() || resetOtp.trim().length !== 6) {
+      setError('Please enter the 6-digit verification code.');
+      triggerShake();
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setError('Password must be at least 6 characters.');
+      triggerShake();
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await api.post('/api/auth/reset-password', {
+        email: forgotEmail.trim(),
+        otp: resetOtp.trim(),
+        password: newPassword,
+      });
+
+      setSuccessMessage('Password Reset!');
+      setSuccess(true);
 
       setTimeout(() => {
-        setShake(false);
-      }, 500);
+        setSuccess(false);
+        setForgotMode(false);
+        setForgotStep('email');
+        setResetOtp('');
+        setNewPassword('');
+        setFormData((prev) => ({ ...prev, email: forgotEmail, password: '' }));
+        setNotice('Password reset successfully. You can now log in.');
+      }, 2000);
+    } catch (err) {
+      setError(
+        err.response?.data?.msg ||
+        err.response?.data?.errors?.[0]?.msg ||
+        'Could not reset password. Please check your code.'
+      );
+      triggerShake();
+    } finally {
+      setLoading(false);
     }
   };
 
-  const requestPasswordReset = async (event) => {
-    event.preventDefault();
+  const openForgotMode = () => {
+    setForgotMode(true);
+    setForgotStep('email');
+    setForgotEmail(formData.email);
+    setResetOtp('');
+    setNewPassword('');
     setError('');
     setNotice('');
-    try {
-      const { data } = await api.post('/api/auth/forgot-password', { email: formData.email });
-      setNotice(data.msg);
-    } catch (err) {
-      setError(err.response?.data?.msg || 'Could not request a reset email.');
-    }
   };
 
-  const submitNewPassword = async (event) => {
-    event.preventDefault();
+  const closeForgotMode = () => {
+    setForgotMode(false);
+    setForgotStep('email');
     setError('');
     setNotice('');
-    if (resetPassword.length < 6) return setError('Password too short (min 6 characters).');
-    try {
-      await api.post('/api/auth/reset-password', { token: resetToken, password: resetPassword });
-      setNotice('Password reset successfully. You can now log in.');
-      setResetPassword('');
-      onPasswordReset();
-    } catch (err) {
-      setError(err.response?.data?.msg || 'Could not reset password.');
-    }
   };
 
   return (
     <div className="login-screen">
       <div className={`login-box ${shake ? 'shake' : ''}`}>
-        <h2>{resetToken ? 'Reset Password' : forgotMode ? 'Forgot Password' : 'Welcome Back'}</h2>
+        <h2>
+          {forgotMode
+            ? forgotStep === 'otp'
+              ? 'Verify & Reset'
+              : 'Reset Password'
+            : 'Welcome Back'}
+        </h2>
 
         {/* 👀 Eyes */}
         <div className="eyes-container">
@@ -210,64 +401,130 @@ const Login = ({ setToken, onSwitchToRegister, resetToken, onPasswordReset }) =>
           ))}
         </div>
 
-        {resetToken ? (
-          <form onSubmit={submitNewPassword}>
-            <p className="login-message instruction">Choose a new password for your account.</p>
-            <div className="input-group">
-              <input
-                type="password"
-                placeholder="New password"
-                value={resetPassword}
-                onChange={(e) => setResetPassword(e.target.value)}
-                minLength="6"
-                required
-              />
-            </div>
-            {(error || notice) && (
-              <p className={`login-message ${error ? 'error' : 'notice'}`}>
-                {error || notice}
+        {forgotMode ? (
+          forgotStep === 'otp' ? (
+            /* Forgot Password Step 2: OTP + New Password */
+            <form onSubmit={handleResetPassword} className="otp-form">
+              <p className="login-message instruction">
+                Enter the 6-digit code sent to <br />
+                <strong className="email-highlight">{forgotEmail}</strong>
               </p>
-            )}
-            <button type="submit" className="login-button">
-              Reset password
-            </button>
-          </form>
-        ) : forgotMode ? (
-          <form onSubmit={requestPasswordReset}>
-            <p className="login-message instruction">
-              Enter your email and we’ll send you a password reset link.
-            </p>
-            <div className="input-group">
-              <input
-                type="email"
-                name="email"
-                placeholder="Email address"
-                value={formData.email}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            {(error || notice) && (
-              <p className={`login-message ${error ? 'error' : 'notice'}`}>
-                {error || notice}
+
+              {/* OTP Input */}
+              <div className="input-group otp-group">
+                <input
+                  ref={otpInputRef}
+                  type="text"
+                  maxLength="6"
+                  placeholder="000000"
+                  value={resetOtp}
+                  onChange={(e) => setResetOtp(e.target.value.replace(/\D/g, ''))}
+                  className="otp-input"
+                  required
+                  autoComplete="one-time-code"
+                />
+              </div>
+
+              {/* New Password */}
+              <div className="input-group">
+                <input
+                  type={showNewPassword ? 'text' : 'password'}
+                  placeholder="New password"
+                  value={newPassword}
+                  onChange={handleNewPasswordChange}
+                  minLength="6"
+                  required
+                />
+                <span
+                  className="input-icon"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  title={showNewPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showNewPassword ? '🔒' : '👁️'}
+                </span>
+              </div>
+
+              {/* Password Strength */}
+              {newPassword && (
+                <>
+                  <div className="password-strength">
+                    <div
+                      className={`password-strength-bar strength-${strength.score}`}
+                      style={{ width: `${strength.percentage}%` }}
+                    />
+                  </div>
+                  <div className="feedback">{strength.message}</div>
+                </>
+              )}
+
+              {notice && <p className="login-message notice">{notice}</p>}
+              {error && <p className="login-message error">{error}</p>}
+
+              <button
+                type="submit"
+                className="login-button"
+                disabled={loading || resetOtp.length !== 6 || newPassword.length < 6}
+              >
+                {loading ? 'Resetting Password...' : 'Verify & Set Password'}
+              </button>
+
+              <div className="otp-actions">
+                <button
+                  type="button"
+                  className="otp-resend-btn"
+                  onClick={handleResendResetOtp}
+                  disabled={resendTimer > 0 || loading}
+                >
+                  {resendTimer > 0 ? `Resend code in ${resendTimer}s` : 'Resend OTP'}
+                </button>
+
+                <button
+                  type="button"
+                  className="otp-back-btn"
+                  onClick={() => {
+                    setForgotStep('email');
+                    setError('');
+                    setNotice('');
+                    setResetOtp('');
+                  }}
+                >
+                  ← Change Email
+                </button>
+              </div>
+            </form>
+          ) : (
+            /* Forgot Password Step 1: Request OTP */
+            <form onSubmit={handleRequestResetOtp}>
+              <p className="login-message instruction">
+                Enter your email address to receive a 6-digit verification code.
               </p>
-            )}
-            <button type="submit" className="login-button">
-              Send Reset Link
-            </button>
-            <button
-              type="button"
-              className="secondary-btn"
-              onClick={() => {
-                setForgotMode(false);
-                setError('');
-                setNotice('');
-              }}
-            >
-              ← Back to Login
-            </button>
-          </form>
+              <div className="input-group">
+                <input
+                  type="email"
+                  placeholder="Email address"
+                  value={forgotEmail}
+                  onChange={(e) => setForgotEmail(e.target.value)}
+                  required
+                />
+              </div>
+
+              {notice && <p className="login-message notice">{notice}</p>}
+              {error && <p className="login-message error">{error}</p>}
+
+              <button type="submit" className="login-button" disabled={loading}>
+                {loading ? 'Sending Code...' : 'Send Verification OTP'}
+              </button>
+              <button
+                type="button"
+                className="secondary-btn"
+                onClick={closeForgotMode}
+              >
+                ← Back to Login
+              </button>
+            </form>
+          )
         ) : (
+          /* Regular Login Form */
           <form onSubmit={handleSubmit}>
             {/* Email */}
             <div className="input-group">
@@ -301,34 +558,21 @@ const Login = ({ setToken, onSwitchToRegister, resetToken, onPasswordReset }) =>
               </span>
             </div>
 
-            {error && (
-              <p className="login-message error">
-                {error}
-              </p>
-            )}
+            {notice && <p className="login-message notice">{notice}</p>}
+            {error && <p className="login-message error">{error}</p>}
 
-            <button
-              type="submit"
-              className="login-button"
-            >
+            <button type="submit" className="login-button">
               Login
             </button>
           </form>
         )}
 
         {/* Switch Auth Options */}
-        {!resetToken && !forgotMode && (
+        {!forgotMode && (
           <div className="auth-links-group">
             <div className="switch-auth">
               <span>Forgot password?</span>
-              <button
-                type="button"
-                onClick={() => {
-                  setForgotMode(true);
-                  setError('');
-                  setNotice('');
-                }}
-              >
+              <button type="button" onClick={openForgotMode}>
                 Reset Password
               </button>
             </div>
@@ -342,17 +586,10 @@ const Login = ({ setToken, onSwitchToRegister, resetToken, onPasswordReset }) =>
           </div>
         )}
 
-        {forgotMode && !resetToken && (
+        {forgotMode && forgotStep === 'email' && (
           <div className="switch-auth">
             <span>Remember your password?</span>
-            <button
-              type="button"
-              onClick={() => {
-                setForgotMode(false);
-                setError('');
-                setNotice('');
-              }}
-            >
+            <button type="button" onClick={closeForgotMode}>
               Login
             </button>
           </div>
@@ -374,7 +611,7 @@ const Login = ({ setToken, onSwitchToRegister, resetToken, onPasswordReset }) =>
               d="M14.1 27.2l7.1 7.2 16.7-16.8"
             />
           </svg>
-          <h3>Access Granted!</h3>
+          <h3>{successMessage}</h3>
         </div>
       </div>
     </div>
