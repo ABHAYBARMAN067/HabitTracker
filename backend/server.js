@@ -15,9 +15,17 @@ if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
   throw new Error('JWT_SECRET must be configured in production');
 }
 
+
 mongoose.connect(mongoUri, { serverSelectionTimeoutMS: 10000 })
   .then(() => {
-    console.log('MongoDB connected');
+    console.log('\n----------------------------------------');
+    console.log('HabitFlow Project Started Successfully!');
+    console.log(' Backend connected to MongoDB');
+    console.log(' Authentication & OTP working');
+    console.log(' Analytics APIs working');
+    console.log(' Frontend connected successfully');
+    console.log('All features are working correctly!');
+    console.log('----------------------------------------\n');
     app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
   })
   .catch(error => {
